@@ -1,28 +1,38 @@
 ---
-title: Addresses
-description: Create and manage temporary email addresses.
+title: "Addresses"
+description: "Create and manage temporary email addresses."
 ---
 
 <Note>
-All address endpoints use the base URL `https://tempinbox.dev`.
+  `POST /api/new_address` requires Cloudflare Turnstile when enabled on the server. For automation, extract a JWT from the browser instead of calling this endpoint directly. See [Authentication](/api-reference/authentication) for details.
 </Note>
 
-## Create address
+---
+
+## Create Address
 
 `POST /api/new_address`
 
-Creates a new temporary inbox. Returns a JWT and sets `jwt` + `session_id` cookies.
+Creates a new temporary inbox. Returns a JWT and sets `jwt` \+ `session_id` cookies.
+
+### Turnstile Requirement
+
+This endpoint is protected by Cloudflare Turnstile on the public instance. Raw API calls without a valid `cf_token` will fail.
+
+**For automation:** Use a JWT extracted from the browser UI instead. See [Authentication → API automation](/api-reference/authentication).
+
+**For self-hosted instances** with Turnstile disabled:
 
 <CodeGroup>
+
 ```bash cURL
-curl -X POST https://tempinbox.dev/api/new_address \
+curl -X POST https://your-instance.com/api/new_address \
   -H "Content-Type: application/json" \
-  -d '{}' \
-  -c cookies.txt
+  -d '{}'
 ```
 
 ```javascript Node.js
-const res = await fetch('https://tempinbox.dev/api/new_address', {
+const res = await fetch('https://your-instance.com/api/new_address', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({}),
@@ -32,10 +42,11 @@ const { address, jwt } = await res.json();
 
 ```python Python
 import requests
-r = requests.post('https://tempinbox.dev/api/new_address', json={})
+r = requests.post('https://your-instance.com/api/new_address', json={})
 address = r.json()['address']
 jwt = r.json()['jwt']
 ```
+
 </CodeGroup>
 
 **Response**
@@ -47,28 +58,28 @@ jwt = r.json()['jwt']
 }
 ```
 
-### Custom name
+### Custom Name
 
-To request a specific local part (the part before `@`):
+To request a specific local part (before `@`):
 
 ```json
 { "name": "mytest", "domain": "tempinbox.dev" }
 ```
 
 <Warning>
-Custom names may be rejected if they are on a blocklist or the server has disabled custom names (`DISABLE_CUSTOM_ADDRESS_NAME=true`). Always handle the error case and fall back to random generation.
+  Custom names may be rejected if they are on a blocklist or the server has disabled custom names. Always handle errors and fall back to random generation.
 </Warning>
 
 ---
 
-## Get address info
+## Get Address Info
 
 `GET /api/settings`
 
-Returns the address associated with the current JWT. Useful for verifying auth.
+Returns the address for the current JWT. Useful for verifying auth.
 
 ```bash
-curl https://tempinbox.dev/api/settings \
+curl "https://tempinbox.dev/api/settings" \
   -H "Authorization: Bearer <jwt>"
 ```
 
@@ -80,14 +91,14 @@ curl https://tempinbox.dev/api/settings \
 
 ---
 
-## Delete address
+## Delete Address
 
 `DELETE /api/delete_address`
 
 Permanently deletes the address and all its emails. Irreversible.
 
 ```bash
-curl -X DELETE https://tempinbox.dev/api/delete_address \
+curl -X DELETE "https://tempinbox.dev/api/delete_address" \
   -H "Authorization: Bearer <jwt>"
 ```
 
@@ -96,3 +107,5 @@ curl -X DELETE https://tempinbox.dev/api/delete_address \
 ```json
 { "success": true }
 ```
+
+**Rate limit:** Per IP. Avoid calling in tight loops.
