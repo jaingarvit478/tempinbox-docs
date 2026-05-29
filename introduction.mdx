@@ -1,0 +1,53 @@
+---
+title: Introduction
+description: Temp Email is a free temporary email service. Get disposable inboxes instantly — no signup, no expiry timer.
+---
+
+## What is Temp Email?
+
+Temp Email ([tempinbox.dev](https://tempinbox.dev)) is a free disposable inbox service. It gives you a working email address in seconds — no account, no password, no expiry timer.
+
+You can keep up to **3 persistent inboxes** per browser session. They stay alive until you delete them or clear your browser data.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Create an address and receive your first email in 2 minutes.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/overview">
+    Full REST API for QA automation, CI pipelines, and developer tooling.
+  </Card>
+  <Card title="Playwright Guide" icon="flask" href="/guides/playwright">
+    Automate email verification flows in end-to-end tests.
+  </Card>
+  <Card title="CI Pipeline" icon="server" href="/guides/ci-pipeline">
+    Use temp email in GitHub Actions and other CI environments.
+  </Card>
+</CardGroup>
+
+## Key facts
+
+| Property | Value |
+|---|---|
+| Inboxes per session | Up to 3 |
+| Signup required | No |
+| Expiry timer | None — persists until deleted |
+| Outbound sending | Not supported (receive-only) |
+| API | REST, no API key required for public endpoints |
+| Address format | `anything@tempinbox.dev` |
+| Languages | English, German |
+| Cost | Free |
+
+## What it's for
+
+- Receiving OTP codes, magic links, and verification emails
+- Signing up for trials and gated content without using your real address
+- Developer and QA testing of email-dependent signup flows
+- CI pipeline automation of email verification steps
+
+## What it's NOT for
+
+<Warning>
+Do not use temporary email for accounts where long-term access matters: banking, healthcare, legal accounts, primary social media, or any service requiring email-based account recovery.
+</Warning>
+
+Temp Email is also **receive-only** — it accepts inbound SMTP mail but does not support sending outbound email.

@@ -1,0 +1,87 @@
+---
+title: Authentication
+description: How JWT tokens and session cookies work in the Temp Email API.
+---
+
+## Overview
+
+The Temp Email API uses two complementary auth mechanisms:
+
+| Mechanism | Used for | How it's set |
+|---|---|---|
+| **JWT** (`Authorization: Bearer`) | Per-address inbox access | Returned in `POST /api/new_address` body |
+| **`jwt` cookie** | Browser clients (same-origin) | Set automatically as `HttpOnly` cookie |
+| **`session_id` cookie** | Multi-inbox session management | Set automatically as `HttpOnly` cookie |
+
+---
+
+## JWT auth (recommended for API clients)
+
+After creating an address, use the returned JWT to authenticate all mail endpoints:
+
+```http
+GET /api/mails?limit=10&offset=0
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+```
+
+<Warning>
+JWTs are address-scoped. A JWT for `inbox-a@tempinbox.dev` cannot access emails for `inbox-b@tempinbox.dev`. Store one JWT per address in your test runner.
+</Warning>
+
+### Getting a JWT
+
+```bash
+curl -X POST https://tempinbox.dev/api/new_address \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
+# Response:
+# {
+#   "address": "swift-cloud-7x4@tempinbox.dev",
+#   "jwt": "eyJhbGciOiJIUzI1NiJ9..."
+# }
+```
+
+### JWT lifetime
+
+JWTs are valid for **7 days**. After expiry, create a new address or re-authenticate via the session.
+
+---
+
+## Cookie auth (browser clients)
+
+When using the API from a browser on `tempinbox.dev`, cookies are set automatically:
+
+- `jwt` — address JWT, `HttpOnly`, `SameSite=Lax`, 7-day expiry
+- `session_id` — session identifier, `HttpOnly`, `SameSite=Lax`, 30-day expiry
+
+No manual token handling needed for browser-based use.
+
+---
+
+## Session endpoints (no JWT required)
+
+These endpoints use the `session_id` cookie, not a JWT:
+
+- `GET /api/session/addresses` — list all addresses in session
+- `POST /api/switch_address` — switch active inbox
+- `POST /api/logout` — clear session
+
+---
+
+## No-auth endpoints
+
+These endpoints require no authentication at all:
+
+- `POST /api/new_address` — create a new address
+- `GET /health_check` — service health
+
+---
+
+## Custom auth (self-hosted instances)
+
+Self-hosted deployments can require an additional `x-custom-auth` header by setting the `PASSWORDS` environment variable. This is for server-level access control, not end-user auth.
+
+```http
+x-custom-auth: your-password-here
+```

@@ -1,0 +1,171 @@
+---
+title: Playwright
+description: Automate email verification flows in Playwright end-to-end tests using the Temp Email API.
+---
+
+## Why use a real inbox in E2E tests?
+
+Test fixtures and mocked emails skip the actual SMTP delivery path — meaning they miss:
+- Rendering bugs in email templates
+- Spam filter rejections
+- SMTP misconfiguration
+- Delays caused by delivery queuing
+
+Temp Email tests the real path. Each test run gets a unique address so parallel runs never collide.
+
+---
+
+## Setup
+
+No package install needed — the Temp Email API is a plain HTTP REST API.
+
+```bash
+# Confirm your Playwright version supports fixtures
+npx playwright --version
+```
+
+---
+
+## Helper: `tempmail.ts`
+
+Create a shared helper that manages address creation and polling:
+
+```typescript tempmail.ts
+const BASE = 'https://tempinbox.dev';
+
+export async function createInbox(): Promise<{ address: string; jwt: string }> {
+  const res = await fetch(`${BASE}/api/new_address`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) throw new Error(`Failed to create inbox: ${res.status}`);
+  return res.json();
+}
+
+export async function waitForMail(
+  jwt: string,
+  options: { timeoutMs?: number; pollIntervalMs?: number } = {}
+): Promise<{ uuid: string; subject: string; raw: string }> {
+  const { timeoutMs = 30_000, pollIntervalMs = 2_000 } = options;
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const res = await fetch(`${BASE}/api/mails?limit=1&offset=0`, {
+      headers: { Authorization: `Bearer ${jwt}` },
+    });
+    const { results } = await res.json();
+    if (results.length > 0) {
+      const mail = results[0];
+      // fetch full mail for raw body
+      const detail = await fetch(`${BASE}/api/mail/${mail.uuid}`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      const full = await detail.json();
+      const meta = JSON.parse(full.metadata || '{}');
+      return { uuid: full.uuid, subject: meta.subject || '', raw: full.raw || '' };
+    }
+    await new Promise(r => setTimeout(r, pollIntervalMs));
+  }
+  throw new Error(`No email received within ${timeoutMs}ms`);
+}
+
+export function extractOtp(raw: string): string {
+  const match = raw.match(/\b\d{6}\b/);
+  if (!match) throw new Error('No 6-digit OTP found in email body');
+  return match[0];
+}
+
+export function extractLink(raw: string, pattern: RegExp): string {
+  const match = raw.match(pattern);
+  if (!match) throw new Error('Link not found in email body');
+  return match[0];
+}
+```
+
+---
+
+## Example: OTP verification flow
+
+```typescript tests/otp-signup.spec.ts
+import { test, expect } from '@playwright/test';
+import { createInbox, waitForMail, extractOtp } from '../tempmail';
+
+test('user can sign up and verify OTP', async ({ page }) => {
+  // 1. Create a unique inbox for this test
+  const { address, jwt } = await createInbox();
+
+  // 2. Fill in the signup form
+  await page.goto('https://your-app.example.com/signup');
+  await page.fill('[name="email"]', address);
+  await page.fill('[name="password"]', 'Test1234!');
+  await page.click('button[type="submit"]');
+
+  // 3. Wait for the verification email
+  const mail = await waitForMail(jwt, { timeoutMs: 30_000 });
+
+  // 4. Extract and submit the OTP
+  const otp = extractOtp(mail.raw);
+  await page.fill('[name="otp"]', otp);
+  await page.click('button[type="submit"]');
+
+  // 5. Assert success
+  await expect(page).toHaveURL(/dashboard/);
+});
+```
+
+---
+
+## Example: Magic link flow
+
+```typescript tests/magic-link.spec.ts
+import { test, expect } from '@playwright/test';
+import { createInbox, waitForMail, extractLink } from '../tempmail';
+
+test('user can log in via magic link', async ({ page }) => {
+  const { address, jwt } = await createInbox();
+
+  await page.goto('https://your-app.example.com/login');
+  await page.fill('[name="email"]', address);
+  await page.click('button[type="submit"]');
+
+  // Wait for magic link email
+  const mail = await waitForMail(jwt, { timeoutMs: 30_000 });
+  const link = extractLink(mail.raw, /https:\/\/your-app\.example\.com\/auth\/[^\s"]+/);
+
+  // Navigate to the magic link
+  await page.goto(link);
+  await expect(page).toHaveURL(/dashboard/);
+});
+```
+
+---
+
+## Parallel test safety
+
+Each test creates its own unique address — no shared state, no race conditions.
+
+```typescript playwright.config.ts
+export default defineConfig({
+  workers: 4, // safe — each worker gets its own inbox
+  use: {
+    baseURL: 'https://your-app.example.com',
+  },
+});
+```
+
+---
+
+## Tips
+
+<AccordionGroup>
+  <Accordion title="Set a realistic poll timeout">
+    30 seconds is usually enough for local/staging environments. For external SMTP in CI, use 60 seconds.
+  </Accordion>
+  <Accordion title="Don't poll too fast">
+    2–3 second intervals avoid rate limiting. The Temp Email API caches mail lists for 60 seconds at offset=0.
+  </Accordion>
+  <Accordion title="Clean up after tests">
+    Call `DELETE /api/delete_address` in `afterAll` to keep inboxes tidy, though it's not strictly required since addresses don't expire.
+  </Accordion>
+</AccordionGroup>

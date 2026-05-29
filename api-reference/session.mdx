@@ -1,0 +1,75 @@
+---
+title: Session
+description: Manage up to 3 addresses per browser session.
+---
+
+The session system lets users keep multiple inboxes active simultaneously (up to 3). It uses an HMAC-signed `session_id` cookie stored in Cloudflare KV.
+
+<Note>
+Session endpoints are designed for browser clients. For API automation, track JWTs per address directly instead of using session management.
+</Note>
+
+---
+
+## List session addresses
+
+`GET /api/session/addresses`
+
+Returns all addresses in the current session and which one is active.
+
+```bash
+curl https://tempinbox.dev/api/session/addresses \
+  -b cookies.txt   # sends session_id cookie
+```
+
+**Response**
+
+```json
+{
+  "addresses": [
+    { "address": "swift-cloud-7x4@tempinbox.dev", "createdAt": 1748426400000 },
+    { "address": "rain-forest-9p2@tempinbox.dev", "createdAt": 1748430000000 }
+  ],
+  "activeAddress": "rain-forest-9p2@tempinbox.dev"
+}
+```
+
+---
+
+## Switch active address
+
+`POST /api/switch_address`
+
+Switches the active inbox. Updates the `jwt` cookie to the JWT for the selected address. Also rotates the `session_id` for security.
+
+```bash
+curl -X POST https://tempinbox.dev/api/switch_address \
+  -H "Content-Type: application/json" \
+  -b cookies.txt -c cookies.txt \
+  -d '{ "address": "swift-cloud-7x4@tempinbox.dev" }'
+```
+
+**Response**
+
+```json
+{ "success": true, "address": "swift-cloud-7x4@tempinbox.dev" }
+```
+
+---
+
+## Logout
+
+`POST /api/logout`
+
+Deletes the session from KV storage and clears `jwt` and `session_id` cookies.
+
+```bash
+curl -X POST https://tempinbox.dev/api/logout \
+  -b cookies.txt -c cookies.txt
+```
+
+**Response**
+
+```json
+{ "success": true }
+```

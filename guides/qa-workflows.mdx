@@ -1,0 +1,161 @@
+---
+title: QA Workflows
+description: Patterns for using Temp Email in manual and automated QA workflows.
+---
+
+## The core pattern
+
+Every QA workflow using temp email follows the same structure:
+
+```
+1. Create unique inbox  →  address + jwt
+2. Trigger email flow   →  submit address to form/API under test
+3. Poll inbox           →  wait for mail to arrive (with timeout)
+4. Assert on content    →  verify subject, OTP, link, sender
+5. Continue test flow   →  click link or submit code
+```
+
+---
+
+## Pattern 1: OTP verification
+
+Test that your app sends a 6-digit code and the form accepts it.
+
+```typescript
+async function testOtpSignup(page: Page) {
+  const { address, jwt } = await createInbox();
+
+  // Trigger email
+  await page.fill('[name=email]', address);
+  await page.click('[type=submit]');
+
+  // Wait and extract
+  const mail = await waitForMail(jwt);
+  const otp = mail.raw.match(/\b\d{6}\b/)?.[0];
+  expect(otp).toBeDefined();
+
+  // Submit
+  await page.fill('[name=otp]', otp!);
+  await page.click('[type=submit]');
+  await expect(page).toHaveURL(/verified/);
+}
+```
+
+---
+
+## Pattern 2: Magic link
+
+Test that your app sends a valid, working magic link.
+
+```typescript
+async function testMagicLink(page: Page) {
+  const { address, jwt } = await createInbox();
+
+  await submitLoginForm(page, address);
+
+  const mail = await waitForMail(jwt);
+  const link = mail.raw.match(/https:\/\/app\.example\.com\/auth\/[^\s"<]+/)?.[0];
+  expect(link).toBeDefined();
+
+  await page.goto(link!);
+  await expect(page).toHaveURL(/dashboard/);
+}
+```
+
+---
+
+## Pattern 3: Welcome email content check
+
+Verify that onboarding emails contain the right content.
+
+```typescript
+async function testWelcomeEmail(jwt: string) {
+  const mail = await waitForMail(jwt);
+  const meta = JSON.parse(mail.raw); // or parse raw headers
+  
+  expect(mail.subject).toContain('Welcome to');
+  expect(mail.raw).toContain('Get started');
+  expect(mail.raw).not.toContain('unsubscribe'); // welcome email shouldn't have this
+}
+```
+
+---
+
+## Pattern 4: Parallel signup tests
+
+Multiple users signing up concurrently — each gets their own inbox.
+
+```typescript
+test.describe.parallel('concurrent signups', () => {
+  for (let i = 0; i < 5; i++) {
+    test(`user ${i} signup`, async ({ page }) => {
+      // Each test creates a separate inbox — no collision
+      const { address, jwt } = await createInbox();
+      await runSignupFlow(page, address, jwt);
+    });
+  }
+});
+```
+
+---
+
+## Pattern 5: Multi-step onboarding
+
+Some flows send multiple emails in sequence. Chain `waitForMail` calls and clear the inbox between steps.
+
+```typescript
+async function testOnboardingSequence(page: Page) {
+  const { address, jwt } = await createInbox();
+
+  // Step 1: Signup confirmation
+  await triggerSignup(page, address);
+  const confirmMail = await waitForMail(jwt);
+  await clickLink(page, confirmMail, /confirm/);
+
+  // Clear so next poll only returns new mail
+  await clearInbox(jwt);
+
+  // Step 2: Onboarding email (arrives 5 min later in some apps)
+  const onboardingMail = await waitForMail(jwt, { timeoutMs: 360_000 });
+  expect(onboardingMail.subject).toContain('Getting started');
+}
+```
+
+---
+
+## Manual QA checklist
+
+For QA engineers testing manually without automation:
+
+<Steps>
+  <Step title="Open Temp Email">
+    Go to [tempinbox.dev](https://tempinbox.dev) and copy the generated address.
+  </Step>
+  <Step title="Use the address in the app under test">
+    Paste into the signup/login form and submit.
+  </Step>
+  <Step title="Check the inbox">
+    Return to Temp Email. The verification email should appear within seconds.
+  </Step>
+  <Step title="Verify email content">
+    Check: correct subject, sender address, OTP code format, link validity, no broken HTML.
+  </Step>
+  <Step title="Complete the flow">
+    Click the link or enter the code. Verify the app transitions to the correct state.
+  </Step>
+  <Step title="Document findings">
+    Note any content issues, delivery delays, or missing emails in your QA report.
+  </Step>
+</Steps>
+
+---
+
+## Common failure modes
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Email never arrives | SMTP misconfiguration or spam filter | Check server logs; verify MX records |
+| Email arrives but code is wrong format | Template bug | Fix template regex extraction |
+| Link in email is broken (404) | Wrong base URL in template | Fix `APP_URL` env var |
+| Parallel tests flake | Shared inbox | Give each test its own unique address |
+| Timeout in CI | External SMTP slow | Increase poll timeout to 60–90s |

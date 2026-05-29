@@ -1,0 +1,98 @@
+---
+title: Addresses
+description: Create and manage temporary email addresses.
+---
+
+<Note>
+All address endpoints use the base URL `https://tempinbox.dev`.
+</Note>
+
+## Create address
+
+`POST /api/new_address`
+
+Creates a new temporary inbox. Returns a JWT and sets `jwt` + `session_id` cookies.
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://tempinbox.dev/api/new_address \
+  -H "Content-Type: application/json" \
+  -d '{}' \
+  -c cookies.txt
+```
+
+```javascript Node.js
+const res = await fetch('https://tempinbox.dev/api/new_address', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({}),
+});
+const { address, jwt } = await res.json();
+```
+
+```python Python
+import requests
+r = requests.post('https://tempinbox.dev/api/new_address', json={})
+address = r.json()['address']
+jwt = r.json()['jwt']
+```
+</CodeGroup>
+
+**Response**
+
+```json
+{
+  "address": "swift-cloud-7x4@tempinbox.dev",
+  "jwt": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+### Custom name
+
+To request a specific local part (the part before `@`):
+
+```json
+{ "name": "mytest", "domain": "tempinbox.dev" }
+```
+
+<Warning>
+Custom names may be rejected if they are on a blocklist or the server has disabled custom names (`DISABLE_CUSTOM_ADDRESS_NAME=true`). Always handle the error case and fall back to random generation.
+</Warning>
+
+---
+
+## Get address info
+
+`GET /api/settings`
+
+Returns the address associated with the current JWT. Useful for verifying auth.
+
+```bash
+curl https://tempinbox.dev/api/settings \
+  -H "Authorization: Bearer <jwt>"
+```
+
+**Response**
+
+```json
+{ "address": "swift-cloud-7x4@tempinbox.dev" }
+```
+
+---
+
+## Delete address
+
+`DELETE /api/delete_address`
+
+Permanently deletes the address and all its emails. Irreversible.
+
+```bash
+curl -X DELETE https://tempinbox.dev/api/delete_address \
+  -H "Authorization: Bearer <jwt>"
+```
+
+**Response**
+
+```json
+{ "success": true }
+```

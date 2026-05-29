@@ -1,0 +1,99 @@
+---
+title: Quickstart
+description: Create a temp email address and receive your first email in under 2 minutes.
+---
+
+## Browser (no code)
+
+<Steps>
+  <Step title="Open Temp Email">
+    Go to [tempinbox.dev](https://tempinbox.dev). A new inbox address is shown immediately — no signup needed.
+  </Step>
+  <Step title="Copy the address">
+    Click the copy icon next to the address (e.g. `swift-cloud-7x4@tempinbox.dev`).
+  </Step>
+  <Step title="Use it anywhere">
+    Paste it into any signup or verification form. The inbox updates automatically when mail arrives.
+  </Step>
+  <Step title="Read your email">
+    Click the email in the inbox to open it. Copy verification codes or click magic links directly.
+  </Step>
+</Steps>
+
+---
+
+## Via API (developers)
+
+Create an address and poll for mail programmatically.
+
+<CodeGroup>
+```bash cURL
+# 1. Create a new address
+curl -X POST https://tempinbox.dev/api/new_address \
+  -H "Content-Type: application/json" \
+  -d '{}' \
+  -c cookies.txt   # save cookies (jwt + session_id)
+
+# Response:
+# { "address": "swift-cloud-7x4@tempinbox.dev", "jwt": "eyJ..." }
+```
+
+```javascript Node.js
+const res = await fetch('https://tempinbox.dev/api/new_address', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({}),
+  credentials: 'include',
+});
+const { address, jwt } = await res.json();
+console.log('Address:', address);
+
+// 2. Poll for mail
+const mails = await fetch('https://tempinbox.dev/api/mails?limit=10&offset=0', {
+  headers: { Authorization: `Bearer ${jwt}` },
+});
+const { results } = await mails.json();
+console.log('Emails:', results);
+```
+
+```python Python
+import requests
+
+session = requests.Session()
+
+# 1. Create address
+r = session.post('https://tempinbox.dev/api/new_address', json={})
+data = r.json()
+address = data['address']
+jwt = data['jwt']
+print(f'Address: {address}')
+
+# 2. Poll for mail
+r = session.get(
+    'https://tempinbox.dev/api/mails',
+    params={'limit': 10, 'offset': 0},
+    headers={'Authorization': f'Bearer {jwt}'}
+)
+emails = r.json()['results']
+print(f'Emails: {emails}')
+```
+</CodeGroup>
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
+    How JWT and session cookies work.
+  </Card>
+  <Card title="Full API Reference" icon="book" href="/api-reference/overview">
+    All endpoints with request/response schemas.
+  </Card>
+  <Card title="Playwright Guide" icon="flask" href="/guides/playwright">
+    End-to-end email testing automation.
+  </Card>
+  <Card title="CI Pipeline" icon="server" href="/guides/ci-pipeline">
+    Use temp email in GitHub Actions.
+  </Card>
+</CardGroup>

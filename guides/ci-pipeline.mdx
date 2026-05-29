@@ -1,0 +1,156 @@
+---
+title: CI Pipeline
+description: Use Temp Email in GitHub Actions, GitLab CI, and other CI environments for automated email verification testing.
+---
+
+## GitHub Actions
+
+Use the Temp Email API directly from shell steps or JavaScript test runners.
+
+### Shell (cURL)
+
+```yaml .github/workflows/e2e.yml
+name: E2E Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create temp email inbox
+        id: inbox
+        run: |
+          RESPONSE=$(curl -s -X POST https://tempinbox.dev/api/new_address \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "address=$(echo $RESPONSE | jq -r .address)" >> $GITHUB_OUTPUT
+          echo "jwt=$(echo $RESPONSE | jq -r .jwt)" >> $GITHUB_OUTPUT
+
+      - name: Run signup flow
+        env:
+          TEST_EMAIL: ${{ steps.inbox.outputs.address }}
+        run: npm run test:e2e
+
+      - name: Wait for verification email and extract OTP
+        id: otp
+        env:
+          JWT: ${{ steps.inbox.outputs.jwt }}
+        run: |
+          for i in $(seq 1 15); do
+            MAIL=$(curl -s "https://tempinbox.dev/api/mails?limit=1&offset=0" \
+              -H "Authorization: Bearer $JWT")
+            COUNT=$(echo $MAIL | jq '.count')
+            if [ "$COUNT" -gt "0" ]; then
+              UUID=$(echo $MAIL | jq -r '.results[0].uuid')
+              RAW=$(curl -s "https://tempinbox.dev/api/mail/$UUID" \
+                -H "Authorization: Bearer $JWT" | jq -r '.raw')
+              OTP=$(echo "$RAW" | grep -oP '\b\d{6}\b' | head -1)
+              echo "otp=$OTP" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "No email received" && exit 1
+
+      - name: Submit OTP
+        env:
+          OTP: ${{ steps.otp.outputs.otp }}
+        run: npm run test:verify -- --otp=$OTP
+```
+
+### Node.js test runner
+
+```yaml .github/workflows/playwright.yml
+name: Playwright E2E
+
+on: [push]
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npx playwright test
+        env:
+          # Tests create their own inboxes via the API — no env var needed
+          BASE_URL: https://your-staging.example.com
+```
+
+---
+
+## GitLab CI
+
+```yaml .gitlab-ci.yml
+e2e-tests:
+  stage: test
+  image: node:20
+  script:
+    - npm ci
+    - npx playwright install --with-deps chromium
+    - npx playwright test
+  variables:
+    BASE_URL: "https://your-staging.example.com"
+```
+
+---
+
+## Environment variable pattern
+
+For test frameworks that need the address upfront (before the test runner starts):
+
+```bash
+# generate_inbox.sh — run before test suite
+#!/bin/bash
+RESPONSE=$(curl -s -X POST https://tempinbox.dev/api/new_address \
+  -H "Content-Type: application/json" -d '{}')
+export TEST_EMAIL=$(echo $RESPONSE | jq -r .address)
+export TEST_EMAIL_JWT=$(echo $RESPONSE | jq -r .jwt)
+echo "TEST_EMAIL=$TEST_EMAIL"
+echo "TEST_EMAIL_JWT=$TEST_EMAIL_JWT"
+```
+
+```yaml github-actions step
+- name: Set test inbox
+  run: |
+    source ./generate_inbox.sh
+    echo "TEST_EMAIL=$TEST_EMAIL" >> $GITHUB_ENV
+    echo "TEST_EMAIL_JWT=$TEST_EMAIL_JWT" >> $GITHUB_ENV
+```
+
+---
+
+## Rate limit considerations
+
+In CI with many parallel jobs:
+
+- Each job should create its own inbox (parallel-safe by design)
+- Add 2–3 second delays between poll attempts
+- Use a timeout of 60 seconds for staging SMTP (external delivery is slower)
+- Do not share inboxes across jobs — race conditions will cause flaky tests
+
+---
+
+## Secrets
+
+The Temp Email API requires **no API key** for the public instance. No secrets to manage in CI.
+
+For self-hosted instances with `PASSWORDS` set, add the password as a CI secret:
+
+```yaml
+env:
+  TEMP_EMAIL_AUTH: ${{ secrets.TEMP_EMAIL_PASSWORD }}
+
+# Pass as header:
+curl -H "x-custom-auth: $TEMP_EMAIL_AUTH" ...
+```

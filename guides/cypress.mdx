@@ -1,0 +1,125 @@
+---
+title: Cypress
+description: Use Temp Email in Cypress tests to automate email verification without mocking.
+---
+
+## Pattern: Cypress tasks
+
+Cypress tests run in the browser — they cannot make cross-origin API calls directly. Use **Cypress tasks** to call the Temp Email API from the Node.js process instead.
+
+---
+
+## Setup: `cypress/support/tasks.ts`
+
+```typescript cypress/support/tasks.ts
+const BASE = 'https://tempinbox.dev';
+
+export async function createTempInbox() {
+  const res = await fetch(`${BASE}/api/new_address`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  return res.json(); // { address, jwt }
+}
+
+export async function waitForTempMail(
+  jwt: string,
+  timeoutMs = 30_000,
+  pollMs = 2_500
+): Promise<{ uuid: string; raw: string; subject: string }> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const r = await fetch(`${BASE}/api/mails?limit=1&offset=0`, {
+      headers: { Authorization: `Bearer ${jwt}` },
+    });
+    const { results } = await r.json();
+    if (results.length > 0) {
+      const detail = await fetch(`${BASE}/api/mail/${results[0].uuid}`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      const full = await detail.json();
+      const meta = JSON.parse(full.metadata || '{}');
+      return { uuid: full.uuid, raw: full.raw || '', subject: meta.subject || '' };
+    }
+    await new Promise(r => setTimeout(r, pollMs));
+  }
+  throw new Error('Timed out waiting for email');
+}
+```
+
+## Register tasks: `cypress.config.ts`
+
+```typescript cypress.config.ts
+import { defineConfig } from 'cypress';
+import { createTempInbox, waitForTempMail } from './cypress/support/tasks';
+
+export default defineConfig({
+  e2e: {
+    setupNodeEvents(on) {
+      on('task', {
+        createTempInbox,
+        waitForTempMail: ({ jwt, timeoutMs }: { jwt: string; timeoutMs?: number }) =>
+          waitForTempMail(jwt, timeoutMs),
+      });
+    },
+  },
+});
+```
+
+---
+
+## Example test
+
+```typescript cypress/e2e/signup.cy.ts
+describe('Signup with email verification', () => {
+  it('completes signup and verifies OTP', () => {
+    // 1. Create inbox in Node context
+    cy.task('createTempInbox').then(({ address, jwt }: any) => {
+      // 2. Fill signup form
+      cy.visit('/signup');
+      cy.get('[name="email"]').type(address);
+      cy.get('[name="password"]').type('Test1234!');
+      cy.get('button[type="submit"]').click();
+
+      // 3. Wait for email (runs in Node context)
+      cy.task('waitForTempMail', { jwt, timeoutMs: 30000 }).then((mail: any) => {
+        // 4. Extract OTP
+        const otp = mail.raw.match(/\b\d{6}\b/)?.[0];
+        expect(otp).to.exist;
+
+        // 5. Submit OTP
+        cy.get('[name="otp"]').type(otp);
+        cy.get('button[type="submit"]').click();
+        cy.url().should('include', '/dashboard');
+      });
+    });
+  });
+});
+```
+
+---
+
+## Increasing task timeout
+
+Cypress tasks have a default timeout of 60 seconds. For slow staging environments:
+
+```typescript
+cy.task('waitForTempMail', { jwt, timeoutMs: 50000 }, { timeout: 55000 });
+```
+
+---
+
+## Tips
+
+<AccordionGroup>
+  <Accordion title="Store jwt in Cypress env or alias">
+    Use `cy.wrap(jwt).as('jwt')` or pass it through the test via closures — don't rely on Cypress.env for per-test values.
+  </Accordion>
+  <Accordion title="Parallel specs are safe">
+    Each spec creates its own inbox — parallel Cypress workers won't collide.
+  </Accordion>
+  <Accordion title="No mock service needed">
+    This approach hits real SMTP. You catch real delivery failures that mocks would hide.
+  </Accordion>
+</AccordionGroup>

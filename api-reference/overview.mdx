@@ -1,0 +1,62 @@
+---
+title: API Overview
+description: The Temp Email REST API lets you create inboxes, receive mail, and automate email verification workflows.
+---
+
+## Base URL
+
+```
+https://tempinbox.dev
+```
+
+## Authentication
+
+Most endpoints require a **JWT bearer token** returned by `POST /api/new_address`.
+
+```http
+Authorization: Bearer <jwt>
+```
+
+The JWT is also set as an `HttpOnly` cookie (`jwt`) by the server — browser-based clients get this automatically. Session management (multi-inbox) uses a separate `session_id` cookie.
+
+See [Authentication](/api-reference/authentication) for full details.
+
+## Endpoint groups
+
+| Group | Description |
+|---|---|
+| **Addresses** | Create, inspect, and delete temporary email addresses |
+| **Mails** | List, read, and delete emails in an inbox |
+| **Session** | Manage up to 3 addresses per browser session |
+| **System** | Health check |
+
+## Rate limits
+
+Rate limiting applies per IP on the following paths:
+
+- `POST /api/new_address`
+- `GET /api/mails`
+- `GET /api/mail/:uuid`
+- `POST /api/switch_address`
+- `DELETE /api/delete_address`
+- `DELETE /api/clear_inbox`
+- `GET /api/attachment/*`
+- `GET /api/settings`
+
+Exceeded requests return `429 Too Many Requests`.
+
+## Response format
+
+All responses are JSON unless noted. Errors return plain text with an appropriate HTTP status code.
+
+```json
+// Success
+{ "address": "swift-cloud-7x4@tempinbox.dev", "jwt": "eyJ..." }
+
+// Error (plain text)
+"Invalid domain"
+```
+
+## Interactive playground
+
+Use the [API Reference](/api-reference/openapi) tab to try endpoints directly in the browser with live requests.

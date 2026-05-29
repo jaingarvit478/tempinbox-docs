@@ -1,0 +1,93 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Temp Email",
+  "theme": "quill",
+  "logo": {
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png",
+    "href": "https://tempinbox.dev"
+  },
+  "favicon": "/favicon.ico",
+  "colors": {
+    "primary": "#3b82f6",
+    "light": "#60a5fa",
+    "dark": "#1d4ed8"
+  },
+  "topbar": {
+    "style": "default"
+  },
+  "topbarLinks": [
+    {
+      "name": "Open Inbox",
+      "url": "https://tempinbox.dev"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Free Inbox",
+    "url": "https://tempinbox.dev"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "Guides",
+      "url": "guides"
+    },
+    {
+      "name": "Policies",
+      "url": "policies"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "introduction",
+        "quickstart"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/overview",
+        "api-reference/authentication",
+        "api-reference/addresses",
+        "api-reference/mails",
+        "api-reference/session"
+      ]
+    },
+    {
+      "group": "Integration Guides",
+      "pages": [
+        "guides/playwright",
+        "guides/cypress",
+        "guides/ci-pipeline",
+        "guides/qa-workflows"
+      ]
+    },
+    {
+      "group": "Policies",
+      "pages": [
+        "policies/privacy",
+        "policies/terms",
+        "policies/acceptable-use",
+        "policies/data-retention",
+        "policies/cookie-policy",
+        "policies/security"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "website": "https://tempinbox.dev"
+  },
+  "analytics": {
+    "ga4": {
+      "measurementId": "G-XXXXXXXXXX"
+    }
+  },
+  "seo": {
+    "indexHiddenPages": false
+  }
+}
