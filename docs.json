@@ -12,43 +12,50 @@
     "name": "Get Free Inbox",
     "url": "https://tempinbox.dev"
   },
-  "navigation": [
-    {
-      "group": "Get Started",
-      "pages": [
-        "introduction",
-        "quickstart"
-      ]
-    },
-    {
-      "group": "API Reference",
-      "pages": [
-        "api-reference/overview",
-        "api-reference/authentication",
-        "api-reference/addresses",
-        "api-reference/mails",
-        "api-reference/session"
-      ]
-    },
-    {
-      "group": "Integration Guides",
-      "pages": [
-        "guides/playwright",
-        "guides/cypress",
-        "guides/ci-pipeline",
-        "guides/qa-workflows"
-      ]
-    },
-    {
-      "group": "Policies",
-      "pages": [
-        "policies/privacy",
-        "policies/terms",
-        "policies/acceptable-use",
-        "policies/data-retention",
-        "policies/cookie-policy",
-        "policies/security"
-      ]
-    }
-  ]
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/authentication",
+              "api-reference/addresses",
+              "api-reference/mails",
+              "api-reference/session"
+            ]
+          },
+          {
+            "group": "Integration Guides",
+            "pages": [
+              "guides/playwright",
+              "guides/cypress",
+              "guides/ci-pipeline",
+              "guides/qa-workflows"
+            ]
+          },
+          {
+            "group": "Policies",
+            "pages": [
+              "policies/privacy",
+              "policies/terms",
+              "policies/acceptable-use",
+              "policies/data-retention",
+              "policies/cookie-policy",
+              "policies/security"
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }
