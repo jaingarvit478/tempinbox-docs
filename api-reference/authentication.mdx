@@ -1,23 +1,62 @@
 ---
-title: Authentication
-description: How JWT tokens and session cookies work in the Temp Email API.
+title: "Authentication"
+description: "How JWT tokens and session cookies work in the Temp Email API."
 ---
 
 ## Overview
 
-The Temp Email API uses two complementary auth mechanisms:
-
 | Mechanism | Used for | How it's set |
-|---|---|---|
-| **JWT** (`Authorization: Bearer`) | Per-address inbox access | Returned in `POST /api/new_address` body |
+| --- | --- | --- |
+| **Cloudflare Turnstile** | Creating new addresses | Required in browser; blocks raw API calls |
+| **JWT** (`Authorization: Bearer`) | Per-address inbox access | Returned by `POST /api/new_address` |
 | **`jwt` cookie** | Browser clients (same-origin) | Set automatically as `HttpOnly` cookie |
 | **`session_id` cookie** | Multi-inbox session management | Set automatically as `HttpOnly` cookie |
 
 ---
 
-## JWT auth (recommended for API clients)
+## Cloudflare Turnstile
 
-After creating an address, use the returned JWT to authenticate all mail endpoints:
+`POST /api/new_address` requires a valid Turnstile token (`cf_token`) when Turnstile is enabled. This protects against automated address creation abuse.
+
+**What this means for you:**
+
+<AccordionGroup>
+  <Accordion title="Browser use (no action needed)">
+    Turnstile runs automatically in the Temp Email UI. No manual steps required.
+  </Accordion>
+
+  <Accordion title="API automation — extract JWT from browser">
+    The recommended approach for scripts and CI:
+
+    1. Open [tempinbox.dev](https://tempinbox.dev) in a browser
+    2. DevTools → Application → Cookies → copy the `jwt` cookie value
+    3. Use it as `Authorization: Bearer <jwt>` in your scripts
+    4. The JWT lasts **7 days** — reuse it across runs
+
+    ```bash
+    # Use a pre-extracted JWT directly — no Turnstile needed
+    curl "https://tempinbox.dev/api/mails?limit=10&offset=0" \
+      -H "Authorization: Bearer <your-jwt-here>"
+    ```
+  </Accordion>
+
+  <Accordion title="Self-hosted instances with Turnstile disabled">
+    If you run your own instance with `CF_TURNSTILE_SECRET_KEY` unset, `POST /api/new_address` works without a `cf_token` and returns a JWT directly:
+
+    ```bash
+    curl -X POST https://your-instance.com/api/new_address \
+      -H "Content-Type: application/json" \
+      -d '{}'
+    # Returns: { "address": "...", "jwt": "eyJ..." }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## JWT Auth
+
+After obtaining a JWT, authenticate all mail endpoints:
 
 ```http
 GET /api/mails?limit=10&offset=0
@@ -25,43 +64,25 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
 ```
 
 <Warning>
-JWTs are address-scoped. A JWT for `inbox-a@tempinbox.dev` cannot access emails for `inbox-b@tempinbox.dev`. Store one JWT per address in your test runner.
+  JWTs are address-scoped. A JWT for `inbox-a@tempinbox.dev` cannot access emails for `inbox-b@tempinbox.dev`. Store one JWT per address in your test runner.
 </Warning>
 
-### Getting a JWT
-
-```bash
-curl -X POST https://tempinbox.dev/api/new_address \
-  -H "Content-Type: application/json" \
-  -d '{}'
-
-# Response:
-# {
-#   "address": "swift-cloud-7x4@tempinbox.dev",
-#   "jwt": "eyJhbGciOiJIUzI1NiJ9..."
-# }
-```
-
-### JWT lifetime
-
-JWTs are valid for **7 days**. After expiry, create a new address or re-authenticate via the session.
+**JWT lifetime:** 7 days. After expiry, extract a fresh one from the browser.
 
 ---
 
-## Cookie auth (browser clients)
+## Cookie Auth (Browser Clients)
 
 When using the API from a browser on `tempinbox.dev`, cookies are set automatically:
 
 - `jwt` — address JWT, `HttpOnly`, `SameSite=Lax`, 7-day expiry
 - `session_id` — session identifier, `HttpOnly`, `SameSite=Lax`, 30-day expiry
 
-No manual token handling needed for browser-based use.
-
 ---
 
-## Session endpoints (no JWT required)
+## Session Endpoints (No JWT Required)
 
-These endpoints use the `session_id` cookie, not a JWT:
+These use the `session_id` cookie instead of a JWT:
 
 - `GET /api/session/addresses` — list all addresses in session
 - `POST /api/switch_address` — switch active inbox
@@ -69,19 +90,19 @@ These endpoints use the `session_id` cookie, not a JWT:
 
 ---
 
-## No-auth endpoints
+## No-Auth Endpoints
 
-These endpoints require no authentication at all:
+No authentication required:
 
-- `POST /api/new_address` — create a new address
+- `POST /api/new_address` — create address (Turnstile required unless disabled)
 - `GET /health_check` — service health
 
 ---
 
-## Custom auth (self-hosted instances)
+## Rate Limits
 
-Self-hosted deployments can require an additional `x-custom-auth` header by setting the `PASSWORDS` environment variable. This is for server-level access control, not end-user auth.
+All authenticated endpoints are rate-limited per IP. If you hit `429 Too Many Requests`:
 
-```http
-x-custom-auth: your-password-here
-```
+- Add 2–3 second delays between poll requests on `/api/mails`
+- Avoid creating new addresses in tight loops
+- Reuse JWTs across test runs — a JWT is valid for 7 days
