@@ -1,12 +1,17 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Temp Email",
+  "theme": "mint",
   "colors": {
     "primary": "#3b82f6",
     "light": "#60a5fa",
     "dark": "#1d4ed8"
   },
   "favicon": "/favicon.ico",
+  "topbarCtaButton": {
+    "name": "Get Free Inbox",
+    "url": "https://tempinbox.dev"
+  },
   "navigation": [
     {
       "group": "Get Started",
@@ -45,9 +50,5 @@
         "policies/security"
       ]
     }
-  ],
-  "topbarCtaButton": {
-    "name": "Get Free Inbox",
-    "url": "https://tempinbox.dev"
-  }
+  ]
 }
