@@ -1,12 +1,12 @@
 ---
-title: Quickstart
-description: Create a temp email address and receive your first email in under 2 minutes.
+title: "Quickstart"
+description: "Create a temp email address and receive your first email in under 2 minutes."
 ---
 
 ## Browser (no code)
 
 <Steps>
-  <Step title="Open Temp Email">
+  <Step title="Open TempInbox">
     Go to [tempinbox.dev](https://tempinbox.dev). A new inbox address is shown immediately — no signup needed.
   </Step>
   <Step title="Copy the address">
@@ -27,6 +27,7 @@ description: Create a temp email address and receive your first email in under 2
 Create an address and poll for mail programmatically.
 
 <CodeGroup>
+
 ```bash cURL
 # 1. Create a new address
 curl -X POST https://tempinbox.dev/api/new_address \
@@ -77,6 +78,7 @@ r = session.get(
 emails = r.json()['results']
 print(f'Emails: {emails}')
 ```
+
 </CodeGroup>
 
 ---
@@ -87,12 +89,15 @@ print(f'Emails: {emails}')
   <Card title="Authentication" icon="key" href="/api-reference/authentication">
     How JWT and session cookies work.
   </Card>
+
   <Card title="Full API Reference" icon="book" href="/api-reference/overview">
     All endpoints with request/response schemas.
   </Card>
+
   <Card title="Playwright Guide" icon="flask" href="/guides/playwright">
     End-to-end email testing automation.
   </Card>
+
   <Card title="CI Pipeline" icon="server" href="/guides/ci-pipeline">
     Use temp email in GitHub Actions.
   </Card>

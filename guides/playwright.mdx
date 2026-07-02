@@ -1,23 +1,24 @@
 ---
-title: Playwright
-description: Automate email verification flows in Playwright end-to-end tests using the Temp Email API.
+title: "Playwright"
+description: "Automate email verification flows in Playwright end-to-end tests using the TempInbox API."
 ---
 
 ## Why use a real inbox in E2E tests?
 
 Test fixtures and mocked emails skip the actual SMTP delivery path — meaning they miss:
+
 - Rendering bugs in email templates
 - Spam filter rejections
 - SMTP misconfiguration
 - Delays caused by delivery queuing
 
-Temp Email tests the real path. Each test run gets a unique address so parallel runs never collide.
+TempInbox tests the real path. Each test run gets a unique address so parallel runs never collide.
 
 ---
 
 ## Setup
 
-No package install needed — the Temp Email API is a plain HTTP REST API.
+No package install needed — the TempInbox API is a plain HTTP REST API.
 
 ```bash
 # Confirm your Playwright version supports fixtures
@@ -162,10 +163,20 @@ export default defineConfig({
   <Accordion title="Set a realistic poll timeout">
     30 seconds is usually enough for local/staging environments. For external SMTP in CI, use 60 seconds.
   </Accordion>
+
   <Accordion title="Don't poll too fast">
-    2–3 second intervals avoid rate limiting. The Temp Email API caches mail lists for 60 seconds at offset=0.
+    2–3 second intervals avoid rate limiting. The TempInbox API caches mail lists for 60 seconds at offset=0.
   </Accordion>
+
   <Accordion title="Clean up after tests">
     Call `DELETE /api/delete_address` in `afterAll` to keep inboxes tidy, though it's not strictly required since addresses don't expire.
   </Accordion>
 </AccordionGroup>
+
+---
+
+## Related reading
+
+- [Disposable Email in Playwright and Cypress: E2E](https://tempinbox.dev/blog/disposable-email-playwright-cypress) — broader E2E patterns and pitfalls
+- [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing) — when to use real inboxes vs mocks
+- [Cypress guide](/guides/cypress) — the same flow using Cypress tasks

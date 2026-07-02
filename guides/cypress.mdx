@@ -1,11 +1,11 @@
 ---
-title: Cypress
-description: Use Temp Email in Cypress tests to automate email verification without mocking.
+title: "Cypress"
+description: "Use TempInbox in Cypress tests to automate email verification without mocking."
 ---
 
 ## Pattern: Cypress tasks
 
-Cypress tests run in the browser — they cannot make cross-origin API calls directly. Use **Cypress tasks** to call the Temp Email API from the Node.js process instead.
+Cypress tests run in the browser — they cannot make cross-origin API calls directly. Use **Cypress tasks** to call the TempInbox API from the Node.js process instead.
 
 ---
 
@@ -116,10 +116,20 @@ cy.task('waitForTempMail', { jwt, timeoutMs: 50000 }, { timeout: 55000 });
   <Accordion title="Store jwt in Cypress env or alias">
     Use `cy.wrap(jwt).as('jwt')` or pass it through the test via closures — don't rely on Cypress.env for per-test values.
   </Accordion>
+
   <Accordion title="Parallel specs are safe">
     Each spec creates its own inbox — parallel Cypress workers won't collide.
   </Accordion>
+
   <Accordion title="No mock service needed">
     This approach hits real SMTP. You catch real delivery failures that mocks would hide.
   </Accordion>
 </AccordionGroup>
+
+---
+
+## Related reading
+
+- [Disposable Email in Playwright and Cypress: E2E](https://tempinbox.dev/blog/disposable-email-playwright-cypress) — broader E2E patterns and pitfalls
+- [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing) — when to use real inboxes vs mocks
+- [Playwright guide](/guides/playwright) — the same flow with Playwright fixtures
