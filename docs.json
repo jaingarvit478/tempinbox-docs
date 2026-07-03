@@ -47,7 +47,8 @@
             "group": "Get Started",
             "pages": [
               "introduction",
-              "quickstart"
+              "quickstart",
+              "changelog"
             ]
           },
           {
@@ -61,15 +62,32 @@
             ]
           },
           {
+            "group": "API Playground",
+            "openapi": "openapi.json"
+          },
+          {
             "group": "Integration Guides",
             "pages": [
               "guides/playwright",
               "guides/cypress",
               "guides/selenium",
+              "guides/puppeteer",
+              "guides/java",
+              "guides/go",
+              "guides/ruby",
               "guides/ci-pipeline",
               "guides/qa-workflows",
               "guides/api-clients",
+              "guides/ai-agents",
               "guides/troubleshooting"
+            ]
+          },
+          {
+            "group": "Comparisons",
+            "pages": [
+              "comparisons/mailinator",
+              "comparisons/mailosaur",
+              "comparisons/mailtrap"
             ]
           },
           {

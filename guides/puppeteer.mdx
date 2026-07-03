@@ -1,0 +1,82 @@
+---
+title: "Puppeteer"
+description: "Automate email verification flows in Puppeteer tests using the TempInbox API."
+---
+
+## Pattern
+
+Puppeteer drives the browser; plain `fetch` (Node 18+) talks to the TempInbox API. Zero dependencies beyond Puppeteer itself. If you're choosing a framework today, see the [Playwright guide](/guides/playwright) — the API integration is identical.
+
+---
+
+## Helper
+
+Reuse the zero-dependency Node client from [API Client Snippets](/guides/api-clients) — `createInbox()`, `waitForMail()`, `extractOtp()`.
+
+<Info>
+  `POST /api/new_address` is Turnstile-protected on the public instance. Pre-create addresses in the web UI and reuse the JWT, or self-host with Turnstile disabled. See [API Overview](/api-reference/overview).
+</Info>
+
+---
+
+## Example: OTP signup (Jest + Puppeteer)
+
+```javascript signup.test.mjs
+import puppeteer from 'puppeteer';
+import { createInbox, waitForMail, extractOtp } from './tempinbox.mjs';
+
+describe('signup with OTP', () => {
+  let browser, page;
+
+  beforeAll(async () => {
+    browser = await puppeteer.launch();
+    page = await browser.newPage();
+  });
+  afterAll(() => browser.close());
+
+  test('user can sign up and verify', async () => {
+    // 1. Unique inbox for this test
+    const { address, jwt } = await createInbox();
+
+    // 2. Fill the signup form
+    await page.goto('https://your-app.example.com/signup');
+    await page.type('[name="email"]', address);
+    await page.type('[name="password"]', 'Test1234!');
+    await page.click('button[type="submit"]');
+
+    // 3. Poll the API (not the browser) for the email
+    const mail = await waitForMail(jwt, { timeoutMs: 30_000 });
+
+    // 4. Submit the OTP
+    const otp = extractOtp(mail.raw);
+    await page.waitForSelector('[name="otp"]');
+    await page.type('[name="otp"]', otp);
+    await page.click('button[type="submit"]');
+
+    // 5. Assert success
+    await page.waitForFunction(() => location.pathname.includes('/dashboard'));
+  }, 60_000);
+});
+```
+
+---
+
+## Magic link
+
+```javascript
+const mail = await waitForMail(jwt);
+const link = mail.raw.match(/https:\/\/your-app\.example\.com\/auth\/[^\s"<]+/)?.[0];
+await page.goto(link);
+```
+
+---
+
+## Tips
+
+- **Poll the API, never scrape the TempInbox UI with Puppeteer** — faster and flake-free
+- **One inbox per test** — parallel Jest workers never collide
+- **2–3s poll interval, 60s timeout in CI** — list responses cached up to 60s at `offset=0`
+
+## Related reading
+
+- [API Client Snippets](/guides/api-clients) · [Playwright](/guides/playwright) · [QA Workflows](/guides/qa-workflows) · [Troubleshooting](/guides/troubleshooting)

@@ -1,0 +1,42 @@
+---
+title: "TempInbox vs Mailinator"
+description: "Honest comparison for email testing: free TempInbox vs enterprise Mailinator — when each is the right choice."
+---
+
+**Short answer:** Mailinator is an enterprise email/SMS testing platform; TempInbox is a free, lightweight disposable inbox with an open REST API. For QA smoke tests, Playwright/Cypress signup flows, and indie/staging validation, TempInbox does the job with zero cost and zero account setup. For team-scale testing with private domains, SMS, and webhooks, Mailinator is the stronger tool.
+
+## Comparison
+
+| | TempInbox | Mailinator |
+| --- | --- | --- |
+| Price | Free | Free public tier; paid plans for private features |
+| Account required | No | Yes, for anything beyond public inboxes |
+| API key | None needed | Required (paid tiers) |
+| Inbox privacy | Private, JWT-bound per browser | Public inboxes on free tier; private domains on paid |
+| Inbox lifetime | No expiry — persists until deleted | Mail auto-expires after hours on free tier |
+| SMS testing | No | Yes (paid) |
+| Private custom domains | No | Yes (paid) |
+| Webhooks | No — polling only | Yes (paid) |
+| Load/volume testing | No | Yes (paid) |
+| Outbound sending | No (receive-only) | Limited |
+| Setup time | Seconds | Account + team onboarding |
+
+## When Mailinator wins
+
+Be honest about this — it wins for: SMS verification flows, dedicated private testing domains, webhook-driven pipelines instead of polling, high-volume load testing, and enterprise compliance requirements. If your team already pays for it, keep it.
+
+## When TempInbox wins
+
+- **Cost and friction**: no account, no API key, no billing — a CI job can use it in one curl call
+- **Privacy on the free tier**: TempInbox inboxes are private by default; Mailinator's free public inboxes are readable by anyone who guesses the name
+- **No expiry pressure**: inboxes persist until deleted — re-run a failed CI job an hour later against the same inbox
+- **Simplicity**: three REST endpoints cover the whole workflow
+
+## Migration is trivial
+
+Both reduce to "create address → poll inbox → extract code." Swapping Mailinator's SDK for TempInbox's REST calls is usually under an hour — see [API Client Snippets](/guides/api-clients) for drop-in Python/Node/shell helpers and the [Playwright](/guides/playwright)/[Cypress](/guides/cypress) guides for full test examples.
+
+## Related reading
+
+- [Mailinator Alternative: Persistent Temp Inboxes](https://tempinbox.dev/blog/mailinator-alternative) — the consumer-angle comparison
+- [QA Workflows](/guides/qa-workflows) — patterns these tools have in common

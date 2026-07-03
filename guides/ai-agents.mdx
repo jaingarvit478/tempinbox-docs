@@ -1,0 +1,115 @@
+---
+title: "Email for AI Agents"
+description: "Give your AI agent a working email inbox — receive verification codes, magic links, and signup emails via the TempInbox API."
+---
+
+AI agents that sign up for services hit the same wall every time: the verification email. TempInbox gives an agent a real, working inbox through three plain REST calls — no browser scraping, no IMAP, no API key.
+
+```text
+1. Create inbox      →  POST /api/new_address   →  { address, jwt }
+2. Use the address   →  agent submits it to the signup form
+3. Poll for mail     →  GET /api/mails          →  extract OTP / link
+```
+
+<Warning>
+  Agents must respect the same boundaries as humans: TempInbox is **receive-only** and must not be used for banking, healthcare, legal, payroll, or any account requiring durable recovery. See the [Acceptable Use Policy](/policies/acceptable-use).
+</Warning>
+
+---
+
+## Minimal agent tool (any framework)
+
+The whole integration is one polling loop. This works in any agent runtime that can call functions:
+
+```javascript email-tool.mjs
+const BASE = 'https://tempinbox.dev';
+
+export async function getVerificationCode(jwt, { timeoutMs = 60_000 } = {}) {
+  const deadline = Date.now() + timeoutMs;
+  const headers = { Authorization: `Bearer ${jwt}` };
+
+  while (Date.now() < deadline) {
+    const { results } = await (
+      await fetch(`${BASE}/api/mails?limit=1&offset=0`, { headers })
+    ).json();
+
+    if (results.length > 0) {
+      const full = await (
+        await fetch(`${BASE}/api/mail/${results[0].uuid}`, { headers })
+      ).json();
+      const otp = full.raw.match(/\b\d{6}\b/)?.[0];
+      const link = full.raw.match(/https?:\/\/[^\s"<]+(?:verify|confirm|auth)[^\s"<]*/i)?.[0];
+      return { otp, link, subject: JSON.parse(full.metadata || '{}').subject };
+    }
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  throw new Error('No verification email received');
+}
+```
+
+---
+
+## Claude tool-use definition
+
+Expose the inbox as tools in an Anthropic API `tools` array:
+
+```json
+[
+  {
+    "name": "get_inbox_address",
+    "description": "Returns the agent's temporary email address for use in signup forms. The inbox receives real email.",
+    "input_schema": { "type": "object", "properties": {} }
+  },
+  {
+    "name": "wait_for_verification_email",
+    "description": "Polls the temporary inbox until a verification email arrives. Returns the OTP code and/or verification link found in the message. Times out after 60 seconds.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "timeout_seconds": { "type": "integer", "default": 60 }
+      }
+    }
+  }
+]
+```
+
+Your tool handler backs these with `createInbox()` / `getVerificationCode()` from the snippets above — pre-create the inbox at session start and hold the JWT server-side so the model never sees credentials.
+
+---
+
+## LangChain tool wrapper
+
+```python email_tool.py
+from langchain_core.tools import tool
+from tempinbox import wait_for_mail, extract_otp  # see API Client Snippets
+
+JWT = "..."  # pre-created inbox JWT, held outside the prompt
+
+@tool
+def wait_for_verification_email(timeout_s: int = 60) -> str:
+    """Poll the agent's temporary inbox until a verification email arrives.
+    Returns the 6-digit OTP code from the email body."""
+    mail = wait_for_mail(JWT, timeout_s=timeout_s)
+    return extract_otp(mail["raw"])
+```
+
+---
+
+## Design notes for agent builders
+
+| Concern | Recommendation |
+| --- | --- |
+| Inbox creation | Pre-create in the web UI or at session bootstrap — `POST /api/new_address` is Turnstile-protected on the public instance ([details](/api-reference/overview)) |
+| Credential handling | Keep the JWT in the tool handler, never in the prompt or model context |
+| Polling | 3-second interval, 60-second timeout; list responses are cached up to 60s at `offset=0` |
+| One agent, one inbox | Parallel agents must not share an inbox — same rule as [parallel tests](/guides/qa-workflows) |
+| Cleanup | `DELETE /api/delete_address` when the agent session ends |
+| Cross-device | Inboxes are browser/JWT-bound — agents should not assume account-style access from elsewhere |
+
+---
+
+## Related reading
+
+- [API Client Snippets](/guides/api-clients) — the Python/Node/shell helpers used above
+- [API Overview](/api-reference/overview) — auth, Turnstile, rate limits
+- [llms.txt](https://tempinbox.dev/llms.txt) — machine-readable service summary and agentic browsing guidance
