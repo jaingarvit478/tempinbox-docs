@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "Temp Email",
+  "name": "TempInbox",
   "theme": "mint",
   "colors": {
     "primary": "#3b82f6",
