@@ -39,8 +39,10 @@
             "pages": [
               "guides/playwright",
               "guides/cypress",
+              "guides/selenium",
               "guides/ci-pipeline",
-              "guides/qa-workflows"
+              "guides/qa-workflows",
+              "guides/api-clients"
             ]
           },
           {

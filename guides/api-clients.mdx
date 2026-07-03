@@ -1,0 +1,186 @@
+---
+title: "API Client Snippets"
+description: "Copy-paste TempInbox API clients for Python, Node.js, and shell — create inboxes, poll for mail, extract OTPs."
+---
+
+Ready-to-use client helpers for the three most common automation environments. All of them implement the same three operations:
+
+1. **Create inbox** — `POST /api/new_address` → `{ address, jwt }`
+2. **Wait for mail** — poll `GET /api/mails?limit=1&offset=0`, then fetch `GET /api/mail/:uuid`
+3. **Extract content** — OTP codes or links from the raw body
+
+<Info>
+  `POST /api/new_address` requires a Cloudflare Turnstile token on the public instance. For scripts, pre-create the address in the web UI and copy the JWT (see [API Overview](/api-reference/overview)), or self-host with Turnstile disabled. The mail-reading endpoints used below need only the JWT.
+</Info>
+
+---
+
+## Python
+
+```python tempinbox.py
+import json
+import re
+import time
+import requests
+
+BASE = "https://tempinbox.dev"
+
+
+def create_inbox() -> dict:
+    res = requests.post(f"{BASE}/api/new_address", json={})
+    res.raise_for_status()
+    return res.json()  # {"address": ..., "jwt": ...}
+
+
+def wait_for_mail(jwt: str, timeout_s: int = 30, poll_s: float = 2.5) -> dict:
+    deadline = time.monotonic() + timeout_s
+    headers = {"Authorization": f"Bearer {jwt}"}
+    while time.monotonic() < deadline:
+        res = requests.get(
+            f"{BASE}/api/mails",
+            params={"limit": 1, "offset": 0},
+            headers=headers,
+        )
+        results = res.json().get("results", [])
+        if results:
+            detail = requests.get(
+                f"{BASE}/api/mail/{results[0]['uuid']}", headers=headers
+            ).json()
+            meta = json.loads(detail.get("metadata") or "{}")
+            return {
+                "uuid": detail["uuid"],
+                "subject": meta.get("subject", ""),
+                "raw": detail.get("raw", ""),
+            }
+        time.sleep(poll_s)
+    raise TimeoutError(f"No email received within {timeout_s}s")
+
+
+def extract_otp(raw: str) -> str:
+    match = re.search(r"\b\d{6}\b", raw)
+    if not match:
+        raise ValueError("No 6-digit OTP found")
+    return match.group(0)
+```
+
+```python usage.py
+from tempinbox import create_inbox, wait_for_mail, extract_otp
+
+inbox = create_inbox()
+print("Use this address:", inbox["address"])
+
+mail = wait_for_mail(inbox["jwt"])
+print("OTP:", extract_otp(mail["raw"]))
+```
+
+---
+
+## Node.js
+
+Zero dependencies — uses the built-in `fetch` (Node 18+).
+
+```javascript tempinbox.mjs
+const BASE = 'https://tempinbox.dev';
+
+export async function createInbox() {
+  const res = await fetch(`${BASE}/api/new_address`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) throw new Error(`Failed to create inbox: ${res.status}`);
+  return res.json(); // { address, jwt }
+}
+
+export async function waitForMail(jwt, { timeoutMs = 30_000, pollMs = 2_500 } = {}) {
+  const deadline = Date.now() + timeoutMs;
+  const headers = { Authorization: `Bearer ${jwt}` };
+
+  while (Date.now() < deadline) {
+    const res = await fetch(`${BASE}/api/mails?limit=1&offset=0`, { headers });
+    const { results } = await res.json();
+    if (results.length > 0) {
+      const detail = await fetch(`${BASE}/api/mail/${results[0].uuid}`, { headers });
+      const full = await detail.json();
+      const meta = JSON.parse(full.metadata || '{}');
+      return { uuid: full.uuid, subject: meta.subject || '', raw: full.raw || '' };
+    }
+    await new Promise((r) => setTimeout(r, pollMs));
+  }
+  throw new Error(`No email received within ${timeoutMs}ms`);
+}
+
+export function extractOtp(raw) {
+  const match = raw.match(/\b\d{6}\b/);
+  if (!match) throw new Error('No 6-digit OTP found');
+  return match[0];
+}
+```
+
+```javascript usage.mjs
+import { createInbox, waitForMail, extractOtp } from './tempinbox.mjs';
+
+const { address, jwt } = await createInbox();
+console.log('Use this address:', address);
+
+const mail = await waitForMail(jwt);
+console.log('OTP:', extractOtp(mail.raw));
+```
+
+---
+
+## Shell (cURL + jq)
+
+For CI steps and quick one-offs:
+
+```bash tempinbox.sh
+#!/usr/bin/env bash
+set -euo pipefail
+BASE="https://tempinbox.dev"
+
+# Create inbox
+RESPONSE=$(curl -s -X POST "$BASE/api/new_address" \
+  -H "Content-Type: application/json" -d '{}')
+ADDRESS=$(echo "$RESPONSE" | jq -r .address)
+JWT=$(echo "$RESPONSE" | jq -r .jwt)
+echo "Address: $ADDRESS"
+
+# Poll for mail (15 attempts, 3s apart)
+for i in $(seq 1 15); do
+  MAIL=$(curl -s "$BASE/api/mails?limit=1&offset=0" \
+    -H "Authorization: Bearer $JWT")
+  COUNT=$(echo "$MAIL" | jq '.results | length')
+  if [ "$COUNT" -gt 0 ]; then
+    UUID=$(echo "$MAIL" | jq -r '.results[0].uuid')
+    RAW=$(curl -s "$BASE/api/mail/$UUID" \
+      -H "Authorization: Bearer $JWT" | jq -r '.raw')
+    OTP=$(echo "$RAW" | grep -oE '\b[0-9]{6}\b' | head -1)
+    echo "OTP: $OTP"
+    exit 0
+  fi
+  sleep 3
+done
+echo "No email received" >&2
+exit 1
+```
+
+---
+
+## Polling guidelines
+
+These apply to every client above:
+
+| Setting | Recommended | Why |
+| --- | --- | --- |
+| Poll interval | 2–3 seconds | Per-IP rate limits; list endpoint cached 60s at offset=0 |
+| Timeout (staging) | 30 seconds | Local SMTP is fast |
+| Timeout (external SMTP / CI) | 60 seconds | Real delivery queues add latency |
+| Inboxes per test run | 1 per test | Parallel-safe by design; never share across workers |
+
+---
+
+## Related reading
+
+- [Temp Mail API: Automate Disposable Inbox Flows](https://tempinbox.dev/blog/temp-mail-api) — API walkthrough and use cases
+- [API Overview](/api-reference/overview) — auth, Turnstile, rate limits
+- [Selenium](/guides/selenium), [Playwright](/guides/playwright), and [Cypress](/guides/cypress) guides — full test-framework examples
