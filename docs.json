@@ -12,6 +12,32 @@
     "name": "Get Free Inbox",
     "url": "https://tempinbox.dev"
   },
+  "seo": {
+    "metatags": {
+      "og:site_name": "TempInbox Docs",
+      "og:image": "https://tempinbox.dev/logo.webp",
+      "twitter:card": "summary_large_image"
+    },
+    "indexing": "navigable"
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity"
+    ]
+  },
+  "feedback": {
+    "thumbsRating": true
+  },
+  "footer": {
+    "socials": {
+      "website": "https://tempinbox.dev",
+      "github": "https://github.com/jaingarvit478/email_v2"
+    }
+  },
   "navigation": {
     "tabs": [
       {
@@ -42,7 +68,8 @@
               "guides/selenium",
               "guides/ci-pipeline",
               "guides/qa-workflows",
-              "guides/api-clients"
+              "guides/api-clients",
+              "guides/troubleshooting"
             ]
           },
           {
