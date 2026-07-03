@@ -1,0 +1,37 @@
+---
+title: "TempInbox vs Mailosaur"
+description: "Honest comparison for email testing: free TempInbox vs paid Mailosaur — API keys, SMS, spam analysis, and when each fits."
+---
+
+**Short answer:** Mailosaur is a paid, full-featured email and SMS testing platform with official SDKs and deep assertions (spam scoring, link checking, screenshots). TempInbox is free with a no-key REST API. If you need Mailosaur's analysis features or SMS, pay for it. If you need "receive the verification email and extract the code" in tests, TempInbox does that for free.
+
+## Comparison
+
+| | TempInbox | Mailosaur |
+| --- | --- | --- |
+| Price | Free | Paid (trial available) |
+| API key | None | Required |
+| Official SDKs | No — plain REST (copy-paste helpers provided) | Yes: JS, Python, Java, .NET, Ruby, Go, PHP |
+| SMS testing | No | Yes |
+| Spam/deliverability analysis | No | Yes (SpamAssassin scoring, auth checks) |
+| Link + screenshot testing | Parse `raw` yourself | Built-in assertions |
+| Dedicated servers/domains | No | Yes |
+| Inbox privacy | Private, JWT-bound | Private |
+| Inbox lifetime | No expiry until deleted | Retention per plan |
+| Setup | Seconds, no account | Account + API key + server config |
+
+## When Mailosaur wins
+
+Official SDK ergonomics, SMS flows, built-in spam scoring and email-content assertions, and team accounts with support SLAs. Deliverability *analysis* specifically is something TempInbox does not attempt — see [our deliverability-testing guide](https://tempinbox.dev/blog/temp-email-deliverability-testing) for what's possible without it.
+
+## When TempInbox wins
+
+- **Free forever for the core workflow**: create inbox → poll → extract OTP/link
+- **No key management**: nothing to rotate, no secrets in CI ([CI guide](/guides/ci-pipeline))
+- **No per-message or per-server billing**: parallel test matrices create as many inboxes as they need
+- **Simpler mental model**: three endpoints, JSON in/out — [full API playground](/api-reference/overview)
+
+## Related reading
+
+- [Playwright](/guides/playwright), [Cypress](/guides/cypress), [Selenium](/guides/selenium) — test-framework guides
+- [API Client Snippets](/guides/api-clients) — helpers that stand in for an SDK

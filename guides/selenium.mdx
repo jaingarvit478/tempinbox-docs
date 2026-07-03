@@ -1,0 +1,170 @@
+---
+title: "Selenium"
+description: "Automate email verification flows in Selenium tests using the TempInbox API."
+---
+
+## Pattern
+
+Selenium drives the browser; a plain HTTP client (Python `requests`) talks to the TempInbox API from the test process. No Selenium-specific integration is needed — the API is plain REST.
+
+---
+
+## Helper: `tempmail.py`
+
+```python tempmail.py
+import json
+import re
+import time
+import requests
+
+BASE = "https://tempinbox.dev"
+
+
+def create_inbox() -> dict:
+    """Returns {"address": ..., "jwt": ...}."""
+    res = requests.post(f"{BASE}/api/new_address", json={})
+    res.raise_for_status()
+    return res.json()
+
+
+def wait_for_mail(jwt: str, timeout_s: int = 30, poll_s: float = 2.5) -> dict:
+    """Polls the inbox until a mail arrives. Returns {"uuid", "subject", "raw"}."""
+    deadline = time.monotonic() + timeout_s
+    headers = {"Authorization": f"Bearer {jwt}"}
+    while time.monotonic() < deadline:
+        res = requests.get(
+            f"{BASE}/api/mails",
+            params={"limit": 1, "offset": 0},
+            headers=headers,
+        )
+        results = res.json().get("results", [])
+        if results:
+            detail = requests.get(
+                f"{BASE}/api/mail/{results[0]['uuid']}", headers=headers
+            ).json()
+            meta = json.loads(detail.get("metadata") or "{}")
+            return {
+                "uuid": detail["uuid"],
+                "subject": meta.get("subject", ""),
+                "raw": detail.get("raw", ""),
+            }
+        time.sleep(poll_s)
+    raise TimeoutError(f"No email received within {timeout_s}s")
+
+
+def extract_otp(raw: str) -> str:
+    match = re.search(r"\b\d{6}\b", raw)
+    if not match:
+        raise ValueError("No 6-digit OTP found in email body")
+    return match.group(0)
+```
+
+<Info>
+  `POST /api/new_address` is protected by Cloudflare Turnstile on the public instance. For automation, pre-create addresses in the web UI and reuse the JWT, or run against a self-hosted instance with Turnstile disabled. See [API Overview](/api-reference/overview) for the recommended JWT workflow.
+</Info>
+
+---
+
+## Example: OTP signup test (pytest)
+
+```python test_signup.py
+import pytest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+from tempmail import create_inbox, wait_for_mail, extract_otp
+
+
+@pytest.fixture
+def driver():
+    d = webdriver.Chrome()
+    yield d
+    d.quit()
+
+
+def test_signup_with_otp(driver):
+    # 1. Create a unique inbox for this test
+    inbox = create_inbox()
+
+    # 2. Fill the signup form
+    driver.get("https://your-app.example.com/signup")
+    driver.find_element(By.NAME, "email").send_keys(inbox["address"])
+    driver.find_element(By.NAME, "password").send_keys("Test1234!")
+    driver.find_element(By.CSS_SELECTOR, "button[type=submit]").click()
+
+    # 3. Wait for the verification email (polls the API, not the browser)
+    mail = wait_for_mail(inbox["jwt"], timeout_s=30)
+
+    # 4. Extract and submit the OTP
+    otp = extract_otp(mail["raw"])
+    otp_field = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.NAME, "otp"))
+    )
+    otp_field.send_keys(otp)
+    driver.find_element(By.CSS_SELECTOR, "button[type=submit]").click()
+
+    # 5. Assert success
+    WebDriverWait(driver, 10).until(EC.url_contains("/dashboard"))
+```
+
+---
+
+## Example: magic link flow
+
+```python test_magic_link.py
+import re
+from tempmail import create_inbox, wait_for_mail
+
+
+def test_magic_link_login(driver):
+    inbox = create_inbox()
+
+    driver.get("https://your-app.example.com/login")
+    driver.find_element(By.NAME, "email").send_keys(inbox["address"])
+    driver.find_element(By.CSS_SELECTOR, "button[type=submit]").click()
+
+    mail = wait_for_mail(inbox["jwt"], timeout_s=30)
+    link = re.search(r"https://your-app\.example\.com/auth/[^\s\"<]+", mail["raw"])
+    assert link, "Magic link not found in email body"
+
+    driver.get(link.group(0))
+    WebDriverWait(driver, 10).until(EC.url_contains("/dashboard"))
+```
+
+---
+
+## Parallel test safety
+
+Each test creates its own inbox, so `pytest-xdist` parallel workers never collide:
+
+```bash
+pytest -n 4  # safe — every test gets a unique address
+```
+
+---
+
+## Tips
+
+<AccordionGroup>
+  <Accordion title="Poll the API, not the browser">
+    Never use Selenium to open the TempInbox UI and scrape the inbox — poll `GET /api/mails` from Python instead. It is faster, has no UI-flake surface, and does not consume a browser session.
+  </Accordion>
+
+  <Accordion title="Set a realistic poll timeout">
+    30 seconds is usually enough for local/staging SMTP. For external delivery in CI, use 60 seconds.
+  </Accordion>
+
+  <Accordion title="Don't poll too fast">
+    2–3 second intervals avoid per-IP rate limits. The API caches mail lists for 60 seconds at offset=0.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Related reading
+
+- [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing) — when to use real inboxes vs mocks
+- [QA Workflows guide](/guides/qa-workflows) — the same patterns, framework-agnostic
+- [Playwright guide](/guides/playwright) and [Cypress guide](/guides/cypress) — JS/TS equivalents

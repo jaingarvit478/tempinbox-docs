@@ -1,6 +1,6 @@
 ---
 title: "API Overview"
-description: "The Temp Email REST API lets you create inboxes, receive mail, and automate email verification workflows."
+description: "The TempInbox REST API lets you create inboxes, receive mail, and automate email verification workflows."
 ---
 
 ## Base URL
@@ -11,13 +11,13 @@ https://tempinbox.dev
 
 ## Important: Cloudflare Turnstile
 
-Temp Email uses **Cloudflare Turnstile** to protect the `POST /api/new_address` endpoint from abuse. This means:
+TempInbox uses **Cloudflare Turnstile** to protect the `POST /api/new_address` endpoint from abuse. This means:
 
 - Browser-based use works automatically — Turnstile runs invisibly in the UI
 - **Automated/API use requires a valid `cf_token`** — you must solve a Turnstile challenge before creating an address
 
 <Info>
-  For developer and QA automation, the recommended approach is to use the Temp Email **web UI** to pre-create addresses, copy the JWT from the browser (cookies or response body), and then use that JWT directly in your scripts to call the mail endpoints. The mail endpoints (`/api/mails`, `/api/mail/:uuid`) do **not** require Turnstile.
+  For developer and QA automation, the recommended approach is to use the TempInbox **web UI** to pre-create addresses, copy the JWT from the browser (cookies or response body), and then use that JWT directly in your scripts to call the mail endpoints. The mail endpoints (`/api/mails`, `/api/mail/:uuid`) do **not** require Turnstile.
 </Info>
 
 ### Getting a JWT for automation
@@ -88,3 +88,11 @@ All responses are JSON unless noted. Errors return plain text with an appropriat
 // Error (plain text)
 "Invalid domain"
 ```
+
+---
+
+## Related reading
+
+- [Temp Mail API: Automate Disposable Inbox Flows](https://tempinbox.dev/blog/temp-mail-api) — use cases and API walkthrough
+- [Temp Email for Developers: API, CI, Testing](https://tempinbox.dev/blog/temp-email-for-developers) — how the API fits developer workflows
+- [Playwright](/guides/playwright), [Cypress](/guides/cypress), and [CI Pipeline](/guides/ci-pipeline) guides — runnable examples

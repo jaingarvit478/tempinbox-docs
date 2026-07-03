@@ -1,0 +1,106 @@
+---
+title: "Ruby"
+description: "Automate email verification in RSpec tests with the TempInbox API using Net::HTTP — no gem required."
+---
+
+## Pattern
+
+Standard library only: `net/http` + `json`. No gem, no API key.
+
+<Info>
+  `POST /api/new_address` is Turnstile-protected on the public instance. Pre-create addresses in the web UI and reuse the JWT, or self-host with Turnstile disabled. See [API Overview](/api-reference/overview).
+</Info>
+
+---
+
+## Helper: `temp_inbox.rb`
+
+```ruby temp_inbox.rb
+require "net/http"
+require "json"
+require "uri"
+
+module TempInbox
+  BASE = "https://tempinbox.dev"
+
+  def self.create_inbox
+    uri = URI("#{BASE}/api/new_address")
+    res = Net::HTTP.post(uri, "{}", "Content-Type" => "application/json")
+    JSON.parse(res.body) # { "address" => ..., "jwt" => ... }
+  end
+
+  def self.wait_for_mail(jwt, timeout: 30, poll: 2.5)
+    deadline = Time.now + timeout
+    while Time.now < deadline
+      list = get_json("/api/mails?limit=1&offset=0", jwt)
+      results = list.fetch("results", [])
+      unless results.empty?
+        full = get_json("/api/mail/#{results.first["uuid"]}", jwt)
+        meta = JSON.parse(full["metadata"] || "{}") # metadata is a JSON string
+        return {
+          uuid: full["uuid"],
+          subject: meta["subject"].to_s,
+          raw: full["raw"].to_s
+        }
+      end
+      sleep poll
+    end
+    raise "No email received within #{timeout}s"
+  end
+
+  def self.extract_otp(raw)
+    raw[/\b\d{6}\b/] or raise "No 6-digit OTP found"
+  end
+
+  def self.get_json(path, jwt)
+    uri = URI("#{BASE}#{path}")
+    req = Net::HTTP::Get.new(uri, "Authorization" => "Bearer #{jwt}")
+    res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |h| h.request(req) }
+    JSON.parse(res.body)
+  end
+end
+```
+
+---
+
+## Example: RSpec + Capybara
+
+```ruby spec/signup_spec.rb
+require "temp_inbox"
+
+RSpec.describe "Signup with email verification", type: :feature do
+  it "completes signup and verifies OTP" do
+    # 1. Unique inbox for this example
+    inbox = TempInbox.create_inbox
+
+    # 2. Fill the signup form
+    visit "/signup"
+    fill_in "email", with: inbox["address"]
+    fill_in "password", with: "Test1234!"
+    click_button "Sign up"
+
+    # 3. Poll the API for the verification email
+    mail = TempInbox.wait_for_mail(inbox["jwt"], timeout: 30)
+
+    # 4. Submit the OTP
+    otp = TempInbox.extract_otp(mail[:raw])
+    fill_in "otp", with: otp
+    click_button "Verify"
+
+    # 5. Assert success
+    expect(page).to have_current_path(%r{/dashboard})
+  end
+end
+```
+
+---
+
+## Tips
+
+- **One inbox per example** — safe with `parallel_tests` / turbo_tests
+- **2–3s poll interval, 60s timeout for external SMTP in CI** — list responses cached up to 60s at `offset=0`
+- **`metadata` is a JSON string** — `JSON.parse` it before reading `subject`, as the helper does
+
+## Related reading
+
+- [API Client Snippets](/guides/api-clients) · [QA Workflows](/guides/qa-workflows) · [Troubleshooting](/guides/troubleshooting)

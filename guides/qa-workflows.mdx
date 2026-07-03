@@ -1,13 +1,13 @@
 ---
-title: QA Workflows
-description: Patterns for using Temp Email in manual and automated QA workflows.
+title: "QA Workflows"
+description: "Patterns for using TempInbox in manual and automated QA workflows."
 ---
 
 ## The core pattern
 
 Every QA workflow using temp email follows the same structure:
 
-```
+```text
 1. Create unique inbox  →  address + jwt
 2. Trigger email flow   →  submit address to form/API under test
 3. Poll inbox           →  wait for mail to arrive (with timeout)
@@ -128,14 +128,14 @@ async function testOnboardingSequence(page: Page) {
 For QA engineers testing manually without automation:
 
 <Steps>
-  <Step title="Open Temp Email">
+  <Step title="Open TempInbox">
     Go to [tempinbox.dev](https://tempinbox.dev) and copy the generated address.
   </Step>
   <Step title="Use the address in the app under test">
     Paste into the signup/login form and submit.
   </Step>
   <Step title="Check the inbox">
-    Return to Temp Email. The verification email should appear within seconds.
+    Return to TempInbox. The verification email should appear within seconds.
   </Step>
   <Step title="Verify email content">
     Check: correct subject, sender address, OTP code format, link validity, no broken HTML.
@@ -153,9 +153,17 @@ For QA engineers testing manually without automation:
 ## Common failure modes
 
 | Symptom | Likely cause | Fix |
-|---|---|---|
+| --- | --- | --- |
 | Email never arrives | SMTP misconfiguration or spam filter | Check server logs; verify MX records |
 | Email arrives but code is wrong format | Template bug | Fix template regex extraction |
 | Link in email is broken (404) | Wrong base URL in template | Fix `APP_URL` env var |
 | Parallel tests flake | Shared inbox | Give each test its own unique address |
 | Timeout in CI | External SMTP slow | Increase poll timeout to 60–90s |
+
+---
+
+## Related reading
+
+- [Temp Mail for QA Teams: Signup Email Testing](https://tempinbox.dev/blog/temp-mail-for-qa-teams) — team-level workflow guidance
+- [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing) — strategy for real inboxes vs mocks
+- [Playwright guide](/guides/playwright) and [Cypress guide](/guides/cypress) — runnable implementations of these patterns

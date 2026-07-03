@@ -1,0 +1,90 @@
+---
+title: "Troubleshooting"
+description: "Fix common TempInbox issues: verification emails not arriving in tests, Turnstile errors in automation, 429 rate limits, and JWT auth failures."
+---
+
+## Verification email never arrives
+
+Work through these in order — the cause is almost always upstream of the inbox:
+
+<Steps>
+  <Step title="Confirm the address is correct">
+    Log the exact address your test submitted. A typo'd domain silently drops mail.
+  </Step>
+  <Step title="Check the sending side">
+    Look at your app's SMTP/server logs. If the send failed or queued, no inbox will ever show it. This is the most common cause.
+  </Step>
+  <Step title="Poll the right way">
+    Use `GET /api/mails?limit=1&offset=0` with the **same JWT** that created the address. Mail lists are cached for 60 seconds at `offset=0` — a brand-new mail can take up to a minute to appear in a cached response.
+  </Step>
+  <Step title="Extend the timeout">
+    Local/staging SMTP delivers in seconds; external providers (SES, SendGrid, Postmark) can queue for 30–60s. Use a 60-second poll timeout in CI.
+  </Step>
+  <Step title="Check the sender's spam reputation">
+    Some senders' mail is rejected at SMTP level before reaching any inbox. Test the same flow with a personal address to isolate.
+  </Step>
+</Steps>
+
+---
+
+## `POST /api/new_address` fails or challenges
+
+The public instance protects address creation with **Cloudflare Turnstile**. Scripts calling it directly without a valid `cf_token` will fail.
+
+**Fix for automation:** don't create addresses from scripts. Pre-create the address in the [web UI](https://tempinbox.dev), copy the JWT (DevTools → Application → Cookies → `jwt`), and use it in your scripts. The mail-reading endpoints don't require Turnstile. Full workflow in [API Overview](/api-reference/overview).
+
+**Self-hosted:** disable Turnstile in your instance config and `POST /api/new_address` returns a JWT directly.
+
+---
+
+## `429 Too Many Requests`
+
+Rate limits apply **per IP, per path**. Common triggers:
+
+| Trigger | Fix |
+| --- | --- |
+| Polling `/api/mails` in a tight loop | Poll every 2–3 seconds, never faster |
+| Creating addresses in a loop | One inbox per test run, reuse JWTs where possible |
+| Many parallel CI jobs from one runner IP | Add jitter between jobs; stagger start times |
+
+Back off exponentially on 429 — hammering a rate-limited endpoint extends the limit window.
+
+---
+
+## `401` / invalid JWT
+
+- JWTs are bound to a specific address. If the address was **deleted**, its JWT stops working — create a new inbox.
+- Copying the JWT with surrounding whitespace or quotes breaks the header. Send exactly: `Authorization: Bearer <jwt>`.
+- Clearing browser data removes the cookie the UI relies on; the raw JWT string you saved elsewhere continues to work in API calls.
+
+---
+
+## Parallel tests are flaky
+
+One shared inbox across parallel workers causes race conditions: worker A consumes the mail worker B is waiting for.
+
+**Fix:** every test creates its own inbox. All framework guides follow this pattern — [Playwright](/guides/playwright), [Cypress](/guides/cypress), [Selenium](/guides/selenium). Never pass one address through a CI env var into a parallel test matrix.
+
+---
+
+## OTP extraction returns the wrong code
+
+A `\b\d{6}\b` regex can match other 6-digit numbers (zip codes, order numbers) in the email body:
+
+- Anchor the regex near a label: `code[:\s]*(\d{6})` or `is[:\s]*(\d{6})`
+- Prefer parsing the plain-text part over raw HTML — tracking pixels and style blocks add numeric noise
+- Log the raw body on extraction failure so you can fix the pattern, not guess
+
+---
+
+## Mail body is empty or metadata missing
+
+`GET /api/mails` returns list entries; the **full body** requires the detail call `GET /api/mail/:uuid`. `metadata` is a JSON *string* — parse it (`JSON.parse` / `json.loads`) before reading `subject`.
+
+---
+
+## Still stuck?
+
+- [API Overview](/api-reference/overview) — auth model, Turnstile, rate-limit table
+- [API Client Snippets](/guides/api-clients) — known-good Python, Node.js, and shell clients to compare against
+- Check the service itself: open [tempinbox.dev](https://tempinbox.dev) and send yourself a test mail from a personal account

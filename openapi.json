@@ -1,0 +1,395 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TempInbox API",
+    "description": "REST API for TempInbox (tempinbox.dev) — create temporary email inboxes, receive mail, and automate email verification workflows. Receive-only: outbound sending is not supported. Rate limits apply per IP, per path; exceeded requests return 429.",
+    "version": "1.0.0",
+    "contact": {
+      "url": "https://tempinbox.dev"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://tempinbox.dev",
+      "description": "Public instance"
+    }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/api/new_address": {
+      "post": {
+        "operationId": "createAddress",
+        "summary": "Create address",
+        "description": "Creates a new temporary inbox and returns its JWT. Protected by Cloudflare Turnstile on the public instance — raw API calls without a valid `cf_token` will fail. For automation, pre-create the address in the web UI and reuse the JWT (see Authentication). Self-hosted instances with Turnstile disabled can call this directly.",
+        "security": [],
+        "tags": ["Addresses"],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Requested local part (before @). May be rejected if blocklisted or custom names are disabled — handle errors and fall back to random generation."
+                  },
+                  "domain": {
+                    "type": "string",
+                    "description": "Address domain",
+                    "example": "tempinbox.dev"
+                  },
+                  "cf_token": {
+                    "type": "string",
+                    "description": "Cloudflare Turnstile token (required on the public instance)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Address created. Also sets `jwt` and `session_id` cookies for browser clients.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NewAddressResponse" }
+              }
+            }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "operationId": "getAddressInfo",
+        "summary": "Get address info",
+        "description": "Returns the address for the current JWT. Useful for verifying auth.",
+        "tags": ["Addresses"],
+        "responses": {
+          "200": {
+            "description": "Current address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": { "type": "string", "example": "swift-cloud-7x4@tempinbox.dev" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/delete_address": {
+      "delete": {
+        "operationId": "deleteAddress",
+        "summary": "Delete address",
+        "description": "Permanently deletes the address and all its emails. Irreversible. The JWT stops working afterwards.",
+        "tags": ["Addresses"],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/mails": {
+      "get": {
+        "operationId": "listMails",
+        "summary": "List emails",
+        "description": "Returns emails for the authenticated address, newest first. For polling, call with `limit=1&offset=0` until `count > 0`, with 2–5 seconds between polls. Responses at `offset=0` are cached for up to 60 seconds.",
+        "tags": ["Mails"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "maximum": 100, "example": 20 },
+            "description": "Number of emails to return (max 100)"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "example": 0 },
+            "description": "Pagination offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/MailListItem" }
+                    },
+                    "count": { "type": "integer", "example": 1 }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/mail/{uuid}": {
+      "get": {
+        "operationId": "getMail",
+        "summary": "Get a single email",
+        "description": "Returns the full email including the raw RFC 2822 body. Parse `raw` client-side to extract subject, body HTML, OTP codes, and attachments. `metadata` is a JSON string — parse it before reading fields.",
+        "tags": ["Mails"],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Email UUID from the list endpoint"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full email",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MailDetail" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/mails/{uuid}": {
+      "delete": {
+        "operationId": "deleteMail",
+        "summary": "Delete an email",
+        "description": "Soft-deletes a single email. Returns immediately.",
+        "tags": ["Mails"],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/clear_inbox": {
+      "delete": {
+        "operationId": "clearInbox",
+        "summary": "Clear inbox",
+        "description": "Deletes all emails in the inbox at once. Useful between steps of multi-email test flows.",
+        "tags": ["Mails"],
+        "responses": {
+          "200": {
+            "description": "Cleared",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/session/addresses": {
+      "get": {
+        "operationId": "listSessionAddresses",
+        "summary": "List session addresses",
+        "description": "Returns all addresses in the current browser session (up to 3) and which one is active. Session endpoints are cookie-based and designed for browser clients — for API automation, track JWTs per address directly.",
+        "security": [{ "sessionCookie": [] }],
+        "tags": ["Session"],
+        "responses": {
+          "200": {
+            "description": "Session addresses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "addresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "address": { "type": "string", "example": "swift-cloud-7x4@tempinbox.dev" },
+                          "createdAt": { "type": "integer", "example": 1748426400000 }
+                        }
+                      }
+                    },
+                    "activeAddress": { "type": "string", "example": "rain-forest-9p2@tempinbox.dev" }
+                  }
+                }
+              }
+            }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/switch_address": {
+      "post": {
+        "operationId": "switchAddress",
+        "summary": "Switch active address",
+        "description": "Switches the active inbox for the session. Updates the `jwt` cookie to the JWT for the selected address and rotates the `session_id` for security.",
+        "security": [{ "sessionCookie": [] }],
+        "tags": ["Session"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["address"],
+                "properties": {
+                  "address": { "type": "string", "example": "swift-cloud-7x4@tempinbox.dev" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Switched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "address": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Logout",
+        "description": "Deletes the session from KV storage and clears the `jwt` and `session_id` cookies.",
+        "security": [{ "sessionCookie": [] }],
+        "tags": ["Session"],
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Address-bound JWT. Returned by POST /api/new_address, or copy it from the browser (DevTools → Application → Cookies → jwt) for automation."
+      },
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session_id",
+        "description": "HMAC-signed browser session cookie. Browser clients only."
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing or invalid JWT. JWTs are address-bound — a deleted address invalidates its JWT.",
+        "content": {
+          "text/plain": { "schema": { "type": "string" } }
+        }
+      },
+      "RateLimited": {
+        "description": "Per-IP, per-path rate limit exceeded. Back off exponentially; poll no faster than every 2–3 seconds.",
+        "content": {
+          "text/plain": { "schema": { "type": "string" } }
+        }
+      }
+    },
+    "schemas": {
+      "NewAddressResponse": {
+        "type": "object",
+        "properties": {
+          "address": { "type": "string", "example": "swift-cloud-7x4@tempinbox.dev" },
+          "jwt": { "type": "string", "example": "eyJhbGciOiJIUzI1NiJ9..." }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true }
+        }
+      },
+      "MailListItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 42 },
+          "uuid": { "type": "string", "format": "uuid", "example": "550e8400-e29b-41d4-a716-446655440000" },
+          "source": { "type": "string", "example": "noreply@example.com" },
+          "address": { "type": "string", "example": "swift-cloud-7x4@tempinbox.dev" },
+          "metadata": {
+            "type": "string",
+            "description": "JSON string — parse before reading fields like subject",
+            "example": "{\"subject\":\"Your verification code is 847291\"}"
+          },
+          "created_at": { "type": "string", "format": "date-time", "example": "2026-05-28T10:00:00Z" },
+          "message_id": { "type": "string", "example": "<abc123@example.com>" }
+        }
+      },
+      "MailDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/MailListItem" },
+          {
+            "type": "object",
+            "properties": {
+              "raw": {
+                "type": "string",
+                "description": "Full raw RFC 2822 message. Parse client-side for body, OTP codes, and attachments.",
+                "example": "From: noreply@example.com\r\nTo: swift-cloud-7x4@tempinbox.dev\r\nSubject: Your code\r\n\r\n847291"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

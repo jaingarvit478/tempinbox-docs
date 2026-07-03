@@ -1,0 +1,159 @@
+---
+title: "Go"
+description: "Automate email verification in Go tests with the TempInbox API using the standard library — no SDK required."
+---
+
+## Pattern
+
+Standard library only: `net/http` + `encoding/json`. No SDK, no API key.
+
+<Info>
+  `POST /api/new_address` is Turnstile-protected on the public instance. Pre-create addresses in the web UI and reuse the JWT, or self-host with Turnstile disabled. See [API Overview](/api-reference/overview).
+</Info>
+
+---
+
+## Helper: `tempinbox.go`
+
+```go tempinbox.go
+package tempinbox
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"regexp"
+	"time"
+)
+
+const base = "https://tempinbox.dev"
+
+type Inbox struct {
+	Address string `json:"address"`
+	JWT     string `json:"jwt"`
+}
+
+type Mail struct {
+	UUID     string
+	Subject  string
+	Raw      string
+}
+
+func CreateInbox() (*Inbox, error) {
+	res, err := http.Post(base+"/api/new_address", "application/json",
+		bytes.NewBufferString("{}"))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	var inbox Inbox
+	return &inbox, json.NewDecoder(res.Body).Decode(&inbox)
+}
+
+func WaitForMail(jwt string, timeout time.Duration) (*Mail, error) {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		var list struct {
+			Results []struct {
+				UUID string `json:"uuid"`
+			} `json:"results"`
+		}
+		if err := getJSON("/api/mails?limit=1&offset=0", jwt, &list); err != nil {
+			return nil, err
+		}
+		if len(list.Results) > 0 {
+			var full struct {
+				UUID     string `json:"uuid"`
+				Raw      string `json:"raw"`
+				Metadata string `json:"metadata"`
+			}
+			if err := getJSON("/api/mail/"+list.Results[0].UUID, jwt, &full); err != nil {
+				return nil, err
+			}
+			var meta struct {
+				Subject string `json:"subject"`
+			}
+			_ = json.Unmarshal([]byte(full.Metadata), &meta) // metadata is a JSON string
+			return &Mail{UUID: full.UUID, Subject: meta.Subject, Raw: full.Raw}, nil
+		}
+		time.Sleep(2500 * time.Millisecond)
+	}
+	return nil, fmt.Errorf("no email received within %s", timeout)
+}
+
+var otpRe = regexp.MustCompile(`\b\d{6}\b`)
+
+func ExtractOTP(raw string) (string, error) {
+	if m := otpRe.FindString(raw); m != "" {
+		return m, nil
+	}
+	return "", errors.New("no 6-digit OTP found")
+}
+
+func getJSON(path, jwt string, v any) error {
+	req, _ := http.NewRequest("GET", base+path, nil)
+	req.Header.Set("Authorization", "Bearer "+jwt)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	return json.NewDecoder(res.Body).Decode(v)
+}
+```
+
+---
+
+## Example: `go test`
+
+```go signup_test.go
+package e2e
+
+import (
+	"testing"
+	"time"
+
+	"yourmodule/tempinbox"
+)
+
+func TestSignupWithOTP(t *testing.T) {
+	t.Parallel() // safe — each test gets its own inbox
+
+	inbox, err := tempinbox.CreateInbox()
+	if err != nil {
+		t.Fatalf("create inbox: %v", err)
+	}
+
+	// Drive your app (chromedp, rod, or plain API calls)
+	if err := runSignupFlow(inbox.Address); err != nil {
+		t.Fatalf("signup: %v", err)
+	}
+
+	mail, err := tempinbox.WaitForMail(inbox.JWT, 30*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	otp, err := tempinbox.ExtractOTP(mail.Raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := submitOTP(otp); err != nil {
+		t.Fatalf("verify: %v", err)
+	}
+}
+```
+
+---
+
+## Tips
+
+- **`t.Parallel()` is safe** — one inbox per test by construction
+- **2–3s poll interval, 60s timeout for external SMTP in CI** — list responses cached up to 60s at `offset=0`
+- **`metadata` is a JSON string** — unmarshal it separately, as the helper does
+
+## Related reading
+
+- [API Client Snippets](/guides/api-clients) · [CI Pipeline](/guides/ci-pipeline) · [Troubleshooting](/guides/troubleshooting)

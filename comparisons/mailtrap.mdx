@@ -1,0 +1,39 @@
+---
+title: "TempInbox vs Mailtrap"
+description: "Honest comparison: Mailtrap's SMTP sandbox vs TempInbox's real-delivery inboxes — they test different things."
+---
+
+**Short answer:** these tools answer different questions. Mailtrap Email Testing is an **SMTP sandbox** — your app sends mail *into a trap* that never reaches a real recipient, so you can inspect content safely from staging. TempInbox is a **real inbox** — mail actually gets delivered over live SMTP. Use Mailtrap to inspect what your app *would* send; use TempInbox to prove the *end-to-end delivery path* works.
+
+## Comparison
+
+| | TempInbox | Mailtrap (Email Testing) |
+| --- | --- | --- |
+| Model | Real inbox, real delivery | Sandbox — mail intercepted, never delivered |
+| Tests real SMTP path | Yes — DNS, MX, queuing, spam filtering all real | No — bypasses real delivery by design |
+| Safe for "don't email real users" staging | Use unique test addresses | Yes — that's its core purpose |
+| HTML/spam analysis UI | No — parse `raw` yourself | Yes — preview, HTML check, spam score |
+| Price | Free | Free tier; paid plans for volume/teams |
+| API key | None | Required |
+| Account | None | Required |
+| E2E signup tests (Playwright/Cypress) | Natural fit — form gets a real address | Needs SMTP config pointed at the trap |
+| Production-config testing | Yes — no app changes needed | No — app must use sandbox SMTP credentials |
+
+## When Mailtrap wins
+
+Pre-production content inspection: previewing templates, HTML rendering across clients, spam scoring — all *before* anything can leak to a real user. If your worry is "staging accidentally emails customers," a sandbox is the correct tool and TempInbox is not a substitute.
+
+## When TempInbox wins
+
+- **End-to-end truth**: Mailtrap can't tell you real delivery works — wrong DNS, broken MX, or a provider block never shows up in a sandbox. A TempInbox test fails when delivery actually fails.
+- **No app reconfiguration**: your app sends through its normal production SMTP path; the test just supplies a TempInbox address in the form
+- **Zero setup in CI**: no credentials, no sandbox host/port wiring — [CI guide](/guides/ci-pipeline)
+
+## Use both
+
+Mature pipelines often do: Mailtrap in staging for content/spam checks, TempInbox in E2E suites for the real-delivery signup flow. They overlap less than they compete.
+
+## Related reading
+
+- [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing) — choosing between sandboxes, mocks, and real inboxes
+- [QA Workflows](/guides/qa-workflows) — end-to-end patterns with real delivery

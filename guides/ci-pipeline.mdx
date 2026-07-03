@@ -1,11 +1,11 @@
 ---
-title: CI Pipeline
-description: Use Temp Email in GitHub Actions, GitLab CI, and other CI environments for automated email verification testing.
+title: "CI Pipeline"
+description: "Use TempInbox in GitHub Actions, GitLab CI, and other CI environments for automated email verification testing."
 ---
 
 ## GitHub Actions
 
-Use the Temp Email API directly from shell steps or JavaScript test runners.
+Use the TempInbox API directly from shell steps or JavaScript test runners.
 
 ### Shell (cURL)
 
@@ -143,7 +143,7 @@ In CI with many parallel jobs:
 
 ## Secrets
 
-The Temp Email API requires **no API key** for the public instance. No secrets to manage in CI.
+The TempInbox API requires **no API key** for the public instance. No secrets to manage in CI.
 
 For self-hosted instances with `PASSWORDS` set, add the password as a CI secret:
 
@@ -154,3 +154,11 @@ env:
 # Pass as header:
 curl -H "x-custom-auth: $TEMP_EMAIL_AUTH" ...
 ```
+
+---
+
+## Related reading
+
+- [Temp Email for Developers: API, CI, Testing](https://tempinbox.dev/blog/temp-email-for-developers) — the full developer workflow overview
+- [Temporary Email for Deliverability Testing](https://tempinbox.dev/blog/temp-email-deliverability-testing) — testing what CI can't catch
+- [Playwright guide](/guides/playwright) — the test-runner side of these pipelines

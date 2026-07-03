@@ -1,0 +1,119 @@
+---
+title: "Java"
+description: "Automate email verification in JUnit tests with the TempInbox API using java.net.http — no SDK required."
+---
+
+## Pattern
+
+Plain `java.net.http.HttpClient` (Java 11+) plus any JSON library. No SDK, no API key.
+
+<Info>
+  `POST /api/new_address` is Turnstile-protected on the public instance. Pre-create addresses in the web UI and reuse the JWT, or self-host with Turnstile disabled. See [API Overview](/api-reference/overview).
+</Info>
+
+---
+
+## Helper: `TempInbox.java`
+
+```java TempInbox.java
+import java.net.URI;
+import java.net.http.*;
+import java.time.Duration;
+import java.util.regex.*;
+import com.fasterxml.jackson.databind.*;
+
+public class TempInbox {
+    private static final String BASE = "https://tempinbox.dev";
+    private static final HttpClient http = HttpClient.newHttpClient();
+    private static final ObjectMapper json = new ObjectMapper();
+
+    public record Inbox(String address, String jwt) {}
+    public record Mail(String uuid, String subject, String raw) {}
+
+    public static Inbox createInbox() throws Exception {
+        var req = HttpRequest.newBuilder(URI.create(BASE + "/api/new_address"))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString("{}"))
+            .build();
+        var node = json.readTree(http.send(req, HttpResponse.BodyHandlers.ofString()).body());
+        return new Inbox(node.get("address").asText(), node.get("jwt").asText());
+    }
+
+    public static Mail waitForMail(String jwt, Duration timeout) throws Exception {
+        long deadline = System.nanoTime() + timeout.toNanos();
+        while (System.nanoTime() < deadline) {
+            var list = json.readTree(get("/api/mails?limit=1&offset=0", jwt));
+            if (list.get("results").size() > 0) {
+                String uuid = list.get("results").get(0).get("uuid").asText();
+                var full = json.readTree(get("/api/mail/" + uuid, jwt));
+                var meta = json.readTree(full.get("metadata").asText(""));
+                return new Mail(uuid,
+                    meta.path("subject").asText(""),
+                    full.path("raw").asText(""));
+            }
+            Thread.sleep(2500);
+        }
+        throw new IllegalStateException("No email received within " + timeout);
+    }
+
+    public static String extractOtp(String raw) {
+        Matcher m = Pattern.compile("\\b\\d{6}\\b").matcher(raw);
+        if (!m.find()) throw new IllegalStateException("No 6-digit OTP found");
+        return m.group();
+    }
+
+    private static String get(String path, String jwt) throws Exception {
+        var req = HttpRequest.newBuilder(URI.create(BASE + path))
+            .header("Authorization", "Bearer " + jwt)
+            .GET().build();
+        return http.send(req, HttpResponse.BodyHandlers.ofString()).body();
+    }
+}
+```
+
+---
+
+## Example: JUnit 5 + Selenium
+
+```java SignupTest.java
+import org.junit.jupiter.api.*;
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
+import java.time.Duration;
+
+class SignupTest {
+    WebDriver driver;
+
+    @BeforeEach void setup() { driver = new ChromeDriver(); }
+    @AfterEach void teardown() { driver.quit(); }
+
+    @Test void signupWithOtp() throws Exception {
+        var inbox = TempInbox.createInbox();
+
+        driver.get("https://your-app.example.com/signup");
+        driver.findElement(By.name("email")).sendKeys(inbox.address());
+        driver.findElement(By.name("password")).sendKeys("Test1234!");
+        driver.findElement(By.cssSelector("button[type=submit]")).click();
+
+        var mail = TempInbox.waitForMail(inbox.jwt(), Duration.ofSeconds(30));
+        String otp = TempInbox.extractOtp(mail.raw());
+
+        driver.findElement(By.name("otp")).sendKeys(otp);
+        driver.findElement(By.cssSelector("button[type=submit]")).click();
+
+        Assertions.assertTrue(driver.getCurrentUrl().contains("/dashboard"));
+    }
+}
+```
+
+---
+
+## Tips
+
+- **One inbox per test** — safe with JUnit parallel execution
+- **2–3s poll interval, 60s timeout for external SMTP in CI** — list responses cached up to 60s at `offset=0`
+- **`metadata` is a JSON string** — parse it before reading `subject`
+
+## Related reading
+
+- [API Client Snippets](/guides/api-clients) · [Selenium](/guides/selenium) · [CI Pipeline](/guides/ci-pipeline) · [Troubleshooting](/guides/troubleshooting)
