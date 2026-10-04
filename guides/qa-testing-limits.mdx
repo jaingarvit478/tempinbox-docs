@@ -6,8 +6,8 @@ canonical: "https://tempinbox.dev/blog/temp-mail-for-qa-testing"
 
 {/* Generated from Sanity. Edit the source article, not this file.
 source-id: article.en.temp-mail-for-qa-testing
-source-revision: NDSnLSsvLZ8vOkSVPiFmPD
-content-sha256: f91560caaf68b8045e1b0672cf10aa68e0ba51bb5f9c6e73793ff118e1dd0973
+source-revision: NDSnLSsvLZ8vOkSVPiG6Bd
+content-sha256: 4ccd807de1c733ac11c8fe89a019d29c1ef3f8a6757f11935f7e26f606644a3b
 */}
 TempInbox suits manual signup, OTP, magic-link, reset, and invite checks with up to 3 browser-saved inboxes. It has no supported public API or shared team workspace. Unattended, bulk, or parallel CI tests need a documented API-capable provider or controlled capture service with suitable quotas and cleanup.
 
@@ -59,6 +59,10 @@ Use fixtures or captured mail for fast template checks, then a small external re
 Keep real customer information, production admin credentials, and important recovery accounts out of disposable receiving workflows. Test password reset with synthetic accounts; that is different from relying on a temporary inbox for your own lasting account recovery.
 
 TempInbox is receive-only and has no supported public API, inbox passwords, custom domains, or cross-device recovery. Access stays with the browser profile holding its saved token. Knowing the address alone does not grant read access, but anyone controlling that browser profile can use it. Message retention is unspecified.
+
+## Which supported services should I evaluate?
+
+For framework automation, [Mailosaur documents an API and framework integrations](https://mailosaur.com/docs/automation). For mail generated inside a controlled test environment, [Mailpit provides an API for captured messages](https://mailpit.axllent.org/docs/api-v1/). TempInbox is an option for manual browser receiving, with no supported public API. These are a practical shortlist, not a verified ranking: check current quotas and requirements, and measure your own representative flows. Local capture does not demonstrate public inbound delivery.
 
 ## Related testing guides
 

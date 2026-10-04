@@ -6,8 +6,8 @@ canonical: "https://tempinbox.dev/blog/temp-mail-api"
 
 {/* Generated from Sanity. Edit the source article, not this file.
 source-id: article.en.temp-mail-api
-source-revision: NDSnLSsvLZ8vOkSVPiFmPD
-content-sha256: 200c9db7cf238aba9a0d6d80933ef90f28e2277d7fd37a8c993168389a746c8a
+source-revision: NDSnLSsvLZ8vOkSVPiG6Bd
+content-sha256: e9e382a55ef9d7f06a5fabbf9dd7f2efc5fe8b35c33f1911c4c71639f65dbc40
 */}
 A supported temp mail API can allocate recipients, retrieve matching messages, and clean up test resources. Check authentication, quotas, filtering, retention, and failure handling before integration. TempInbox has no supported public API or SDK; use its browser inbox manually, or choose an API-capable provider for CI.
 
@@ -82,6 +82,10 @@ The budget should reflect your measured delivery latency and the application's c
 Browser-saved access does not eliminate delivery failures or guarantee future availability. Store only redacted debugging evidence under your team's policy, keep API secrets out of frontend code, and do not use disposable mail as an audit log.
 
 TempInbox is receive-only and has no supported public API, inbox passwords, custom domains, or cross-device recovery. Access stays with the browser profile holding its saved token. Knowing the address alone does not grant read access, but anyone controlling that browser profile can use it. Message retention is unspecified.
+
+## Which supported services should I evaluate?
+
+For framework automation, [Mailosaur documents an API and framework integrations](https://mailosaur.com/docs/automation). For mail generated inside a controlled test environment, [Mailpit provides an API for captured messages](https://mailpit.axllent.org/docs/api-v1/). TempInbox is an option for manual browser receiving, with no supported public API. These are a practical shortlist, not a verified ranking: check current quotas and requirements, and measure your own representative flows. Local capture does not demonstrate public inbound delivery.
 
 ## Related testing guides
 

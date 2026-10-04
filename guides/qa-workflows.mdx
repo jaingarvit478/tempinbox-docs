@@ -6,8 +6,8 @@ canonical: "https://tempinbox.dev/blog/email-for-testing"
 
 {/* Generated from Sanity. Edit the source article, not this file.
 source-id: article.en.email-for-testing
-source-revision: GSx3HQwIWyBGUhAgPwiB8l
-content-sha256: 94a1096864cca6dd3fbcfd7ac5b6002eb27d7812604783056e1353cd4ce72f40
+source-revision: NDSnLSsvLZ8vOkSVPiG6Bd
+content-sha256: 38d65d638bfd57dc2bf2eaa3d996a1859b4eadbb121d9bdb56f729f0de4d108c
 */}
 TempInbox supports browser-based testing of signup emails and verification codes with up to three inboxes. Create an inbox, use its address in your test application, and inspect the received message. TempInbox has no supported public automation API; use a supported mail-testing integration for unattended CI.
 
@@ -60,6 +60,10 @@ These are the failure modes that generate support tickets. Finding them in QA is
 ## Keep test evidence useful for debugging
 
 When a test fails, the inbox should help explain what happened. Include the test name or a run ID in the address prefix when possible, so you can identify which test triggered which email. Record the time the signup request was sent, and capture the full email body in test artifacts — not just the extracted code. A full message with headers is far more useful for debugging a delivery failure than a missing OTP.
+
+## What is better for testing: temp mail or a real mailbox?
+
+A temporary receiving inbox works well for isolated manual checks using synthetic accounts, when the task can finish in one browser and later recovery does not matter. A dedicated durable test mailbox is a better fit when a scenario needs repeated access, account recovery, sending or replies, or a handoff across devices. For unattended CI, use a supported API-capable email-testing provider or a capture service you operate; either mailbox being readable by a person does not make it an automation interface.
 
 ## Do not mix QA with production
 
