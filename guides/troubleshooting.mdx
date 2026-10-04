@@ -1,38 +1,85 @@
 ---
-title: "Troubleshooting Verification Emails"
-description: "Separate rejected addresses, missing messages, expired codes, and lost browser access."
+title: "Temp Mail Blocked? Diagnose Missing Signup Emails"
+description: "Find why a temporary address is rejected or a verification email is missing. Separate domain blocks from sender delays, wrong recipients, and inbox issues."
+canonical: "https://tempinbox.dev/blog/temp-mail-blocked"
 ---
 
-A missing verification email is not proof of a disposable-domain block or a TempInbox outage. Check the submitted address, form result, selected inbox, sender queue, and delivery status.
+{/* Generated from Sanity. Edit the source article, not this file.
+source-id: article.en.temp-mail-blocked
+source-revision: 3KXf86kWrDiyyv8bHZafpM
+content-sha256: f54aaa6e7664223ac080db2447dcd7c69fdb63f5b3a81256066c47a398a15533
+*/}
+Sites may reject temporary email domains to limit abuse or require durable account contact. A missing verification email is not proof of blocking: check the submitted address, form result, selected inbox, sender queue, and delivery status. Creating another address on the same blocked domain does not fix a domain-level rejection.
 
-## Diagnose the failed step
+Published 2026-07-03 · Updated 2026-10-04
 
-| Observed result | Next check |
+**Short answer:** A signup rejection can result from a disposable-domain rule, but a missing verification email can also mean a wrong recipient, delayed send, transport failure, or inbox issue. Diagnose the actual failure before changing addresses.
+
+## How does temp mail get blocked?
+
+1.  **Domain blocklists at the form.** The signup form checks your domain against public and commercial disposable-domain lists and rejects it instantly. Our [disposable email checker guide](https://tempinbox.dev/blog/disposable-email-checker) explains how these lists are built.
+2.  **Silent drops after signup.** The form accepts the address, but the mail system refuses to deliver to flagged domains. The result: a code that never arrives.
+3.  **Risk scoring.** Some platforms combine email domain with IP reputation, device signals, and behavior. A disposable domain raises the account's risk score, which can mean extra verification steps or a later suspension.
+4.  **Service-specific policies.** Financial services, marketplaces, and platforms with fraud exposure often ban disposable email in their terms outright, because accounts must stay reachable and accountable.
+
+## Why do some services block temporary email addresses?
+
+Services choose their own rules for spam prevention, account abuse, and durable contact. The same address can be accepted by one application and rejected by another.
+
+A domain-level rule checks the part after the @ sign. Changing only the local part does not change that domain. A rejection is different from a delivered message that your application refuses to accept as a valid verification credential.
+
+## What can you do when temp mail is blocked?
+
+Use an address type accepted by the service and appropriate for the account's lifetime. A new address on the same blocked domain will not solve a domain-level rejection.
+
+For an account you intend to keep, use a durable mailbox or an accepted alias. When testing your own application, inspect and deliberately configure its disposable-domain policy in the test environment. See [when to use temporary email](https://tempinbox.dev/blog/when-to-use-temp-email).
+
+## Why does a signup verification email never arrive?
+
+A missing message needs a delivery check, not an automatic blocklist diagnosis.
+
+| Observed result | Check next |
 | --- | --- |
-| Form rejects the address | Validation message and accepted-address policy |
-| Form accepts it but no email is queued | Account creation and send-trigger logs in your own application |
-| Send is attempted but rejected | Bounce or transport status and exact recipient |
-| Message is delayed or not visible | Queue status, selected inbox, and receiving-service evidence |
-| Message arrives but code fails | Expiry, recipient account, code reuse, and resend behavior |
+| Address rejected in the form | Validation error and the site's accepted address policy |
+| Form accepted but no send event | Account creation, application queue, and send-trigger logs |
+| Send attempted but rejected | Bounce or transport status and the exact recipient |
+| Message accepted but delayed or not visible | Sender queue, inbox selection, and available receiving-service evidence |
+| Email arrived but code fails | Expiry, recipient account, code reuse, and the current resend attempt |
 
-If you cannot inspect the sender's logs, use its supported resend or support flow without assuming the cause. Delivery timing is not guaranteed.
+In TempInbox, confirm that you selected the address actually submitted and are using the browser profile with its saved access data. If you cannot inspect the sender's logs, use its available support or resend flow without assuming a cause.
 
-## Why do sites reject temporary addresses?
+## The honest trade
 
-Sites may apply disposable-domain lists or other rules for account abuse prevention and durable contact. A domain-level block checks the part after @. Creating a different address prefix on the same domain does not fix it.
+Disposable email trades reachability for privacy. Sites that require durable reachability will keep blocking it, and that is a reasonable line for them to draw. Use temporary inboxes where the trade works — trials, downloads, one-off verifications — and a real address where it does not.
 
-Use an address type accepted by the site. For an account you intend to keep, choose a durable mailbox or accepted alias. When testing your own application, configure and inspect its policy deliberately in the test environment.
+## Frequently asked questions
 
-## Lost inbox access
+### Why do some services block temporary email addresses?
 
-Use the same browser profile where the inbox was created. Private browsing, another profile, or cleared site data may not have the saved access token. The address alone does not restore access, and there is no supported cross-device recovery.
+They may use disposable-domain lists or risk checks to limit abuse or require durable contact. Check the service policy or validation error; not every rejected address has the same cause.
 
-## Self-hosted implementation debugging
+### Why does my signup verification email never arrive?
 
-For an instance you operate, use its deployment configuration and current server logs to inspect authentication, Turnstile requirements, rate limits, and delivery. The [implementation reference](/api-reference/overview) is separate from the hosted browser workflow. Do not export hosted browser credentials as a substitute for a supported automation integration.
+Check the exact recipient, form acceptance, selected inbox, sender queue, and delivery status. A delay or missing message alone does not prove a disposable-domain block.
+
+### Will creating another TempInbox address fix a domain block?
+
+No. A domain-level block applies to the part after @, so changing the address prefix on that same domain does not fix it. Use an accepted address type.
+
+### Does a missing code mean TempInbox is down?
+
+Not necessarily. Sender failures, wrong addresses, domain rejection, transport delays, and receiving-service issues can each cause missing mail. Delivery evidence is needed to distinguish them.
+
+### Can I use temporary email for ongoing account recovery?
+
+Use a durable mailbox for ongoing accounts. TempInbox provides temporary storage and browser-scoped access, with no permanent retention or supported cross-device recovery guarantee.
 
 ## Related guides
 
-- [Email verification codes](/guides/email-verification-codes)
-- [Inbox lifetime](/guides/inbox-lifetime)
-- [Full blocked-email article](https://tempinbox.dev/blog/temp-mail-blocked)
+- [Understand disposable-domain checks](https://tempinbox.dev/blog/disposable-email-checker)
+- [Receive email codes and understand expiry](https://tempinbox.dev/blog/temp-email-for-otp)
+- [Test email verification](https://tempinbox.dev/blog/email-for-testing)
+- [Choose an address for the account lifetime](https://tempinbox.dev/blog/when-to-use-temp-email)
+- [Open TempInbox](https://tempinbox.dev/)
+
+[Read the source article on TempInbox](https://tempinbox.dev/blog/temp-mail-blocked).

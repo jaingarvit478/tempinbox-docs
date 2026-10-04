@@ -1,0 +1,17 @@
+{
+  "name": "tempinbox-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test scripts/*.test.mjs",
+    "sync:preview": "node scripts/sync-sanity.mjs",
+    "sync": "node scripts/sync-sanity.mjs --apply",
+    "validate": "mintlify validate && mintlify broken-links"
+  },
+  "devDependencies": {
+    "@mdx-js/mdx": "3.1.1",
+    "mintlify": "4.2.984",
+    "turndown": "7.2.4",
+    "turndown-plugin-gfm": "1.0.2"
+  }
+}

@@ -1,190 +1,115 @@
 ---
-title: "QA Workflows"
-description: "Patterns for using TempInbox in manual and automated QA workflows."
+title: "Email for Testing: Verification with TempInbox"
+description: "Test signup emails, verification codes, and resend flows with TempInbox. Learn its browser-based workflow and limits for automated testing."
+canonical: "https://tempinbox.dev/blog/email-for-testing"
 ---
 
-## Hosted browser workflow
+{/* Generated from Sanity. Edit the source article, not this file.
+source-id: article.en.email-for-testing
+source-revision: GSx3HQwIWyBGUhAgPwiB8l
+content-sha256: 94a1096864cca6dd3fbcfd7ac5b6002eb27d7812604783056e1353cd4ce72f40
+*/}
+TempInbox supports browser-based testing of signup emails and verification codes with up to three inboxes. Create an inbox, use its address in your test application, and inspect the received message. TempInbox has no supported public automation API; use a supported mail-testing integration for unattended CI.
 
-TempInbox supports manual email-verification testing with up to three browser-saved inboxes. It has no supported public automation API.
+Published 2026-05-09 · Updated 2026-10-04
 
-1. Open TempInbox and your test application in separate tabs.
-2. Create an inbox and copy its address into the signup form.
-3. Select the matching inbox and inspect the sender, recipient, subject, and message.
-4. Use the code or link and verify the intended account's state.
-5. Test resend, expiry, reused codes, and wrong-account attempts separately.
+Email verification is one of the easiest places for tests to break silently. The browser flow works, the form submits, the backend sends a message — but nothing arrives, or the inbox is stale from a previous run, or a shared Gmail account has 200 unread codes and the test picks the wrong one.
 
-Delivery and application verification are separate checks. Use a second or third inbox for another persona, preserve needed evidence outside the inbox, and finish the task before deleting it.
+A dedicated temporary inbox per test or per purpose removes all of that noise. Here is how to set up a sane email testing workflow.
 
-- [Manage multiple inboxes](/guides/multiple-inboxes)
-- [Inbox lifetime and retention](/guides/inbox-lifetime)
-- [Email verification codes](/guides/email-verification-codes)
-- [Current email testing article](https://tempinbox.dev/blog/email-for-testing)
+## Test the flows that block users first
 
-## Self-hosted implementation examples
+Prioritize the paths that prevent account access: signup verification, magic link login, password reset, and team invite. A broken verification email is not a minor bug. It is a hard wall. Users who cannot verify their email cannot enter the product at all.
 
-The examples below describe implementation patterns for an instance you operate, with inbound routing and authentication configured for that deployment. They do not provide a supported hosted-service automation contract. For unattended CI, use a supported mail-testing integration or controlled mail capture system.
+For each of these flows, use a fresh address so results are unambiguous. If the test inbox has one message and it is the one you triggered, there is no confusion about which code is current.
 
-## The core pattern
+## How do you test email verification with TempInbox?
 
-Every QA workflow using temp email follows the same structure:
+For manual email verification testing, create a TempInbox inbox, enter its address in your test application, and inspect the received message. TempInbox supports up to three browser-saved inboxes without requiring an account.
 
-```text
-1. Create unique inbox  →  address + jwt
-2. Trigger email flow   →  submit address to form/API under test
-3. Poll inbox           →  wait for mail to arrive (with timeout)
-4. Assert on content    →  verify subject, OTP, link, sender
-5. Continue test flow   →  click link or submit code
-```
+1.  Open TempInbox and your test application in separate tabs.
+2.  Copy the inbox address into the signup form and submit it.
+3.  Select that inbox and check the recipient, sender, subject, and message body.
+4.  Use the verification link or code in the intended test account.
+5.  Confirm that your application changes the account's verification state correctly.
 
----
+Use one inbox for signup and onboarding, a second for resend or expired-code checks, and a third for invitation flows involving another test persona. Keep the address-to-test mapping in your test notes. Browser-saved access can survive reloads, but message availability remains subject to the [TempInbox Data Retention Policy](https://tempinbox.dev/policies/data-retention).
 
-## Pattern 1: OTP verification
+## How do you automate email testing?
 
-Test that your app sends a 6-digit code and the form accepts it.
+Unattended email tests need a mail-testing service with a supported API or a mail capture system you control. TempInbox does not currently offer a supported public automation API; its browser interface is suited to manual QA.
 
-```typescript
-async function testOtpSignup(page: Page) {
-  const { address, jwt } = await createInbox();
+With an API-capable provider, create a unique address for each test run, trigger the application flow, and wait with a bounded timeout for the expected message. Match the exact recipient, expected sender and subject, and a timestamp captured before the signup request. Do not assume the first message belongs to your current test.
 
-  // Trigger email
-  await page.fill('[name=email]', address);
-  await page.click('[type=submit]');
+Give parallel workers separate addresses and keep provider credentials in your test runner's secret storage. Undocumented TempInbox browser endpoints and browser access tokens are not a supported CI integration.
 
-  // Wait and extract
-  const mail = await waitForMail(jwt);
-  const otp = mail.raw.match(/\b\d{6}\b/)?.[0];
-  expect(otp).toBeDefined();
+The [Playwright and Cypress email-testing guide](https://tempinbox.dev/blog/disposable-email-playwright-cypress) discusses general patterns for API-capable providers. The [temporary email API guide](https://tempinbox.dev/blog/temp-mail-api) explains the category; neither means that TempInbox offers those integrations today.
 
-  // Submit
-  await page.fill('[name=otp]', otp!);
-  await page.click('[type=submit]');
-  await expect(page).toHaveURL(/verified/);
-}
-```
+## Test failure states, not just happy paths
 
----
+Users encounter errors in email flows more often than developers expect. Test these:
 
-## Pattern 2: Magic link
+-   Expired verification link — what does the user see, and can they resend?
+-   Duplicate click on a one-time magic link — does the second click produce a useful error?
+-   Delayed delivery — does the account recover gracefully if the user comes back hours later?
+-   Repeated resend attempts — does the app handle cooldowns and throttling correctly?
+-   Wrong email address — can the user correct it before verification?
 
-Test that your app sends a valid, working magic link.
+These are the failure modes that generate support tickets. Finding them in QA is much cheaper than finding them after launch.
 
-```typescript
-async function testMagicLink(page: Page) {
-  const { address, jwt } = await createInbox();
+## Keep test evidence useful for debugging
 
-  await submitLoginForm(page, address);
+When a test fails, the inbox should help explain what happened. Include the test name or a run ID in the address prefix when possible, so you can identify which test triggered which email. Record the time the signup request was sent, and capture the full email body in test artifacts — not just the extracted code. A full message with headers is far more useful for debugging a delivery failure than a missing OTP.
 
-  const mail = await waitForMail(jwt);
-  const link = mail.raw.match(/https:\/\/app\.example\.com\/auth\/[^\s"<]+/)?.[0];
-  expect(link).toBeDefined();
+## Do not mix QA with production
 
-  await page.goto(link!);
-  await expect(page).toHaveURL(/dashboard/);
-}
-```
+Keep test inboxes disposable and keep production operational mail durable. Never use a temporary inbox for production admin accounts, customer support, payroll, or anything that might need to receive a critical message in six months. Temporary email is right for test accounts — not for real ones.
 
----
+## Related guides
 
-## Pattern 3: Welcome email content check
+[Temp email for developers](https://tempinbox.dev/blog/temp-email-for-developers) · [Temp Mail API guide](https://tempinbox.dev/blog/temp-mail-api) · [Disposable email in Playwright and Cypress](https://tempinbox.dev/blog/disposable-email-playwright-cypress) · [Temp email for signups](https://tempinbox.dev/blog/temp-email-for-signups)
 
-Verify that onboarding emails contain the right content.
+## Why does a signup verification email never arrive?
 
-```typescript
-async function testWelcomeEmail(jwt: string) {
-  const mail = await waitForMail(jwt);
-  const meta = JSON.parse(mail.raw); // or parse raw headers
-  
-  expect(mail.subject).toContain('Welcome to');
-  expect(mail.raw).toContain('Get started');
-  expect(mail.raw).not.toContain('unsubscribe'); // welcome email shouldn't have this
-}
-```
+Start by confirming that the application accepted the address and actually queued a message. Match the submitted address to the inbox you selected, then inspect your application's delivery logs for rejection or delay.
 
----
+A disposable-domain rejection at signup can mean no message was sent. A delivery delay is a different failure: wait within your test's timeout, and check resend behavior without assuming a new request invalidates every older code unless that is your application's contract.
 
-## Pattern 4: Parallel signup tests
+Successful delivery does not prove that verification works. Test expired and reused codes, wrong-account codes, and the resulting account state separately. Email codes are not SMS codes; TempInbox receives email, not text messages.
 
-Multiple users signing up concurrently — each gets their own inbox.
+## Start using TempInbox
 
-```typescript
-test.describe.parallel('concurrent signups', () => {
-  for (let i = 0; i < 5; i++) {
-    test(`user ${i} signup`, async ({ page }) => {
-      // Each test creates a separate inbox — no collision
-      const { address, jwt } = await createInbox();
-      await runSignupFlow(page, address, jwt);
-    });
-  }
-});
-```
+Create a temporary inbox in seconds. No signup, no timer, up to 3 browser-saved inboxes.
 
----
+[Open your TempInbox →](https://tempinbox.dev/)
 
-## Pattern 5: Multi-step onboarding
+## Frequently asked questions
 
-Some flows send multiple emails in sequence. Chain `waitForMail` calls and clear the inbox between steps.
+### How do I test email verification without a real address?
 
-```typescript
-async function testOnboardingSequence(page: Page) {
-  const { address, jwt } = await createInbox();
+Create a temporary inbox, enter its address in your test application, inspect the delivered email, and verify that its code or link changes the intended account state. TempInbox supports this browser-based manual workflow.
 
-  // Step 1: Signup confirmation
-  await triggerSignup(page, address);
-  const confirmMail = await waitForMail(jwt);
-  await clickLink(page, confirmMail, /confirm/);
+### Can I automate TempInbox in Playwright or Cypress?
 
-  // Clear so next poll only returns new mail
-  await clearInbox(jwt);
+TempInbox does not currently offer a supported public automation API. Use a mail-testing provider with a supported API or a controlled mail capture system for unattended framework tests.
 
-  // Step 2: Onboarding email (arrives 5 min later in some apps)
-  const onboardingMail = await waitForMail(jwt, { timeoutMs: 360_000 });
-  expect(onboardingMail.subject).toContain('Getting started');
-}
-```
+### Can disposable email be used in CI/CD pipelines?
 
----
+Yes, when the chosen provider supports the API or integration needed by your test runner. Give each parallel test its own address, match the expected message, and bound delivery waits. This is not a currently supported TempInbox API workflow.
 
-## Manual QA checklist
+### Why not use a shared test inbox?
 
-For QA engineers testing manually without automation:
+Shared inboxes can mix messages from concurrent or earlier tests. Separate recipients and match sender, subject, and the current test timestamp before using a verification code.
 
-<Steps>
-  <Step title="Open TempInbox">
-    Go to [tempinbox.dev](https://tempinbox.dev) and copy the generated address.
-  </Step>
-  <Step title="Use the address in the app under test">
-    Paste into the signup/login form and submit.
-  </Step>
-  <Step title="Check the inbox">
-    Return to TempInbox. The verification email should appear within seconds.
-  </Step>
-  <Step title="Verify email content">
-    Check: correct subject, sender address, OTP code format, link validity, no broken HTML.
-  </Step>
-  <Step title="Complete the flow">
-    Click the link or enter the code. Verify the app transitions to the correct state.
-  </Step>
-  <Step title="Document findings">
-    Note any content issues, delivery delays, or missing emails in your QA report.
-  </Step>
-</Steps>
+### Can TempInbox receive verification codes?
 
----
+TempInbox can receive email verification codes when the sender accepts the address and successfully delivers the message. It does not receive SMS codes, and delivery is not guaranteed for every service.
 
-## Common failure modes
+## Related guides
 
-| Symptom | Likely cause | Fix |
-| --- | --- | --- |
-| Email never arrives | SMTP misconfiguration or spam filter | Check server logs; verify MX records |
-| Email arrives but code is wrong format | Template bug | Fix template regex extraction |
-| Link in email is broken (404) | Wrong base URL in template | Fix `APP_URL` env var |
-| Parallel tests flake | Shared inbox | Give each test its own unique address |
-| Timeout in CI | External SMTP slow | Increase poll timeout to 60–90s |
+- [Email testing patterns for Playwright and Cypress](https://tempinbox.dev/blog/disposable-email-playwright-cypress)
+- [Manage multiple TempInbox inboxes](https://tempinbox.dev/blog/temporary-email-inbox)
+- [Understand temporary inbox lifetime](https://tempinbox.dev/blog/how-long-does-temp-email-last)
+- [Create a TempInbox inbox](https://tempinbox.dev/)
 
----
-
-## Related reading
-
-- [Temp Mail for QA Teams: Signup Email Testing](https://tempinbox.dev/blog/temp-mail-for-qa-teams) — team-level workflow guidance
-- [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing) — strategy for real inboxes vs mocks
-- [Playwright guide](/guides/playwright) and [Cypress guide](/guides/cypress) — runnable implementations of these patterns
+[Read the source article on TempInbox](https://tempinbox.dev/blog/email-for-testing).
