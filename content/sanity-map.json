@@ -28,5 +28,50 @@
     "id": "article.en.temp-mail-blocked",
     "path": "guides/troubleshooting",
     "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.temp-email-for-developers",
+    "path": "guides/developer-email-testing",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.temp-mail-api",
+    "path": "guides/temporary-email-api",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.disposable-email-playwright-cypress",
+    "path": "guides/framework-email-testing",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.temp-mail-for-qa-testing",
+    "path": "guides/qa-testing-limits",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.best-disposable-email",
+    "path": "guides/choose-a-temporary-email-service",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.disposable-email-services",
+    "path": "guides/temporary-email-service-models",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.10minutemail-alternative",
+    "path": "guides/testing-without-inbox-timers",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.free-temp-emails",
+    "path": "guides/free-temporary-email",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.email-without-registration",
+    "path": "guides/email-without-registration",
+    "group": "Browser Guides"
   }
 ]
