@@ -73,5 +73,30 @@
     "id": "article.en.email-without-registration",
     "path": "guides/email-without-registration",
     "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.temp-mail-for-qa-teams",
+    "path": "guides/team-email-testing",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.temp-email-for-signups",
+    "path": "guides/signup-testing",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.payment-gateway-signup-testing",
+    "path": "guides/payment-sandbox-email-testing",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.temporary-email-reliability",
+    "path": "guides/email-delivery-and-reliability",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.temporary-email-forwarding",
+    "path": "guides/temporary-email-forwarding",
+    "group": "Browser Guides"
   }
 ]
