@@ -1,0 +1,88 @@
+---
+title: "Temporary Email Forwarding: What Works"
+description: "TempInbox does not forward email. Learn when to use forwarding aliases, how to test a destination mailbox, and how to migrate ongoing accounts safely."
+canonical: "https://tempinbox.dev/blog/temporary-email-forwarding"
+---
+
+{/* Generated from Sanity. Edit the source article, not this file.
+source-id: article.en.temporary-email-forwarding
+source-revision: NDSnLSsvLZ8vOkSVPiGB4L
+content-sha256: 54f7c5c08f9a966d21526e8a1ad2d08925e558f0a59d283ec11525d3c0487d72
+*/}
+Forwarding is available only when your chosen service explicitly supports it. Hosted TempInbox is receive-only and does not offer forwarding, sending, or replies. For ongoing messages, use a forwarding alias connected to a mailbox you keep, test the route, and maintain access to both the alias account and destination.
+
+Published 2026-10-04
+
+You can forward mail from a temporary-looking address only if the chosen provider explicitly offers forwarding. Hosted TempInbox does not forward email: it is a receive-only inbox you read in the browser, with no sending or replies. A forwarding alias connected to a mailbox you keep is a different service model.
+
+This guide focuses on setting up, checking, and maintaining that forwarding route. If you only need to choose between a standalone inbox and an alias, the [temporary email versus alias comparison](https://tempinbox.dev/blog/temp-email-vs-email-alias) covers that decision.
+
+## Can I forward an existing TempInbox message?
+
+TempInbox has no forwarding feature or supported public API to relay its messages to another address. Do not treat a saved browser token or internal website request as permission to build a supported forwarding integration.
+
+If a service should reach you in the future, change the contact address at that service to a durable mailbox or a forwarding alias you control. That redirects future mail at its source; it does not transfer old TempInbox messages or add forwarding to its inbox. Save relevant non-sensitive information separately under your own storage policy if needed.
+
+Up to 3 browser-saved inboxes remain tied to the browser profile holding their tokens. There are no inbox passwords, custom domains, or cross-device recovery. Anyone controlling the profile can use its access, and message retention is unspecified.
+
+## How do I set up a forwarding alias?
+
+Choose a provider that explicitly supports an alias-to-mailbox route, verify a destination you control, then create the alias through its supported interface.
+
+As one documented example, [SimpleLogin describes forwarding mail sent to an alias into your mailbox](https://simplelogin.io/). Its [account setup documentation](https://simplelogin.io/docs/getting-started/register-account/) requires an account and email verification, and its [alias creation guide](https://simplelogin.io/docs/getting-started/create-alias/) explains creating a random or custom alias from the dashboard. These are features of that separate service, not TempInbox.
+
+1.  Confirm provider terms and features match your receiving, reply, and recovery needs.
+2.  Register with a durable mailbox you control and complete required verification.
+3.  Create an alias and select or verify its intended destination using documented controls.
+4.  Send a non-sensitive test message from a separate mailbox.
+5.  Confirm it arrives at the expected destination and that the alias is the address you gave the sender.
+6.  Record which account uses the alias so disabling it later does not unexpectedly cut off important mail.
+
+Do not enter a destination belonging to another person or make the alias forward back into itself. If you need replies, follow the provider's documented reply route and test it separately; a forwarding address alone does not guarantee that your underlying address stays hidden during a reply.
+
+## How do I diagnose a missing forwarded message?
+
+Check the forwarding path in stages: the sender accepted the alias, the alias is active, the destination is correct, and the destination mailbox has not filtered or rejected the message.
+
+| Check | What to inspect |
+| --- | --- |
+| Sender action | Was a message sent to the exact alias? |
+| Alias configuration | Is it enabled and linked to the intended destination? |
+| Destination access | Can you sign in and read that mailbox? |
+| Filtering | Spam folders, inbox rules, sender blocks, and provider diagnostics |
+| Failure evidence | Bounce notices or documented delivery logs without sensitive content |
+
+Do not assume enabling forwarding establishes a delivery guarantee. Avoid repeated production verification requests while debugging; use a harmless test message first. Retention and recoverability depend on both services and their current terms.
+
+## How do I migrate an ongoing account safely?
+
+Update its contact address while you can still access the account and verify the replacement before retiring the old receiving workflow. Confirm the application supports address changes first.
+
+Check how the new address handles verification, password reset, and important notices. Keep the alias account and destination mailbox recoverable, and avoid disabling an alias while an account still depends on it. Forwarding provides address separation, not anonymity: the destination service, alias provider, and other account information can still associate activity with you.
+
+## Related guides
+
+[Temporary Email vs Email Alias (2026)](https://tempinbox.dev/blog/temp-email-vs-email-alias), [Masked Email vs a Disposable Inbox](https://tempinbox.dev/blog/masked-email-vs-disposable-inbox), [Email Without Registration: Receive and Move On](https://tempinbox.dev/blog/email-without-registration)
+
+## Frequently asked questions
+
+### Can I forward TempInbox emails elsewhere?
+
+No. Hosted TempInbox has no forwarding, sending, or reply feature. For future mail, update the source service to a durable address or a supported forwarding alias; that does not transfer existing messages.
+
+### How can I receive ongoing mail without giving out my main address?
+
+Use a forwarding alias connected to a mailbox you keep. Create and verify the route through the provider’s supported controls, test delivery, and maintain access to both accounts.
+
+### Does forwarding guarantee recovery or anonymous email?
+
+No. Access depends on the alias account and destination mailbox, and either can fail or be disabled. Forwarding separates addresses; it does not establish anonymity, universal delivery, or indefinite retention.
+
+## Related guides
+
+- [Temporary Email vs Email Alias (2026)](https://tempinbox.dev/blog/temp-email-vs-email-alias)
+- [Masked Email vs a Disposable Inbox](https://tempinbox.dev/blog/masked-email-vs-disposable-inbox)
+- [Email Without Registration: Receive and Move On](https://tempinbox.dev/blog/email-without-registration)
+- [TempInbox receiving inbox](https://tempinbox.dev/)
+
+[Read the source article on TempInbox](https://tempinbox.dev/blog/temporary-email-forwarding).

@@ -68,7 +68,12 @@
               "guides/temporary-email-service-models",
               "guides/testing-without-inbox-timers",
               "guides/free-temporary-email",
-              "guides/email-without-registration"
+              "guides/email-without-registration",
+              "guides/team-email-testing",
+              "guides/signup-testing",
+              "guides/payment-sandbox-email-testing",
+              "guides/email-delivery-and-reliability",
+              "guides/temporary-email-forwarding"
             ]
           },
           {

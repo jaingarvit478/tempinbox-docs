@@ -1,0 +1,88 @@
+---
+title: "Payment Gateway Signup Testing: Sandbox Email"
+description: "Test synthetic signup verification and payment confirmation in a Stripe sandbox. Separate app emails, test receipts, and durable merchant account access."
+canonical: "https://tempinbox.dev/blog/payment-gateway-signup-testing"
+---
+
+{/* Generated from Sanity. Edit the source article, not this file.
+source-id: article.en.payment-gateway-signup-testing
+source-revision: NDSnLSsvLZ8vOkSVPiGB4L
+content-sha256: 37842e8ef06aa7c1b0c660fb3f27dd1175a1348959d341e5a216a694b85b765d
+*/}
+For payment-gateway signup testing, use synthetic customer accounts in a sandbox and documented test payment data. A temporary inbox can check your app’s signup and confirmation mail manually; it is not suitable for a lasting merchant login, identity verification, or real financial notices. Unattended checks need a supported mail API.
+
+Published 2026-10-04
+
+The best receiving tool for payment-gateway signup testing depends on whether a human or a runner performs the check. TempInbox can receive your application's synthetic signup and payment-confirmation emails during manual sandbox testing. Unattended suites need a supported email API or controlled capture service. No comparative provider benchmark establishes a universal best here.
+
+This guide concerns a customer signing up to your test application and making a simulated payment. It does not recommend a temporary address for opening a real merchant account, completing identity or banking verification, receiving live financial notices, or recovering payment-platform administrative access.
+
+## What must stay in the sandbox?
+
+Keep the application, gateway credentials, payment data, and synthetic customer records in a test environment. Do not let a test email address disguise a live transaction.
+
+[Stripe's testing documentation](https://docs.stripe.com/testing) describes sandboxes that simulate transactions without moving funds. It instructs integrations to use test API keys and documented test values rather than real card details. Follow the gateway's test instructions before running the email scenario.
+
+| Component | Test choice | Keep separate |
+| --- | --- | --- |
+| Application signup | Synthetic customer in local or staging | Real customer records |
+| Gateway payment | Sandbox and documented test values | Live keys and real card details |
+| App confirmation email | Fresh test recipient with known action | Real receipts and account recovery |
+| Gateway administrator login | Durable company-controlled mailbox | Disposable receiving access |
+
+## How do I test signup and payment-confirmation emails?
+
+Treat signup verification, payment state, and mail delivery as separate assertions. A browser success screen or received email alone does not establish that the payment state is correct.
+
+1.  Create a synthetic account using a fresh receiving address.
+2.  Trigger your application's signup verification and validate the recipient, code or link, and verified state.
+3.  Complete a simulated payment using the gateway's documented test path.
+4.  Confirm the application records the expected payment result using its integration contract.
+5.  Trigger and inspect your application's payment-confirmation email, matching the synthetic order, recipient, and attempt.
+6.  Check the expected amount, currency, status, and links using non-sensitive synthetic values.
+7.  Remove test accounts and data through supported cleanup operations.
+
+For manual checks, up to 3 browser-saved TempInbox inboxes can separate a signup, another customer persona, and a failure case. For unattended checks, allocate a fresh recipient per attempt through a supported provider, wait within a deadline, and redact payment identifiers and verification tokens in artifacts.
+
+## Why might a test gateway receipt not arrive?
+
+A gateway's own receipt behavior can differ from your application's mail behavior. Do not assume every successful sandbox payment automatically sends a customer email.
+
+[Stripe's test-receipt guidance](https://docs.stripe.com/receipts#test-receipts) instructs you to send a manual receipt for a test payment. If testing that receipt specifically, use its documented manual route and record that action. Keep this test separate from your app's own confirmation email. Confirm current instructions before execution.
+
+For a missing application email, first check that the expected test recipient was accepted and that the mail was queued. For a missing gateway receipt, first check whether the documented sending action occurred. Neither case establishes a receiving-provider outage on its own.
+
+## What failure paths should the scenario cover?
+
+Cover failed or cancelled payment, duplicate notification handling, delayed processing, and a verified signup that never completes payment. Define which cases should produce mail before asserting its presence or absence.
+
+Avoid resending success messages simply because a browser page is refreshed. Use your application's payment-state contract to test duplicate handling, and keep retry attempts distinguishable. Use controlled fixtures or capture mail for deterministic negative assertions, with a small sandbox receiving suite for integration evidence.
+
+TempInbox is receive-only, with no supported public API, inbox passwords, custom domains, or cross-device recovery. Access is held by the browser profile, and message retention is unspecified. It cannot serve as the durable contact address for real payment operations or the source of financial audit evidence.
+
+## Related guides
+
+[Temp Email for Signup Testing: Three Inbox Lanes](https://tempinbox.dev/blog/temp-email-for-signups), [Email for Testing: Verification with TempInbox](https://tempinbox.dev/blog/email-for-testing), [Temp Mail for QA Testing: Limits and Workflows](https://tempinbox.dev/blog/temp-mail-for-qa-testing)
+
+## Frequently asked questions
+
+### What temporary email should I use for payment gateway signup testing?
+
+For manual synthetic customer tests in a sandbox, a receiving inbox such as TempInbox can inspect application signup and confirmation mail. For unattended tests, use a supported mail API. No universal best is established.
+
+### Can I register a real merchant account with TempInbox?
+
+Use a durable company-controlled mailbox for real merchant login, identity or banking verification, administrative recovery, and financial notices. This guide covers synthetic customer flows in a sandbox only.
+
+### Does Stripe automatically email a receipt for every test payment?
+
+Do not assume that. Stripe test-receipt documentation directs you to send a manual receipt for a test payment. Separate that gateway receipt check from your application’s own confirmation email.
+
+## Related guides
+
+- [Temp Email for Signup Testing: Three Inbox Lanes](https://tempinbox.dev/blog/temp-email-for-signups)
+- [Email for Testing: Verification with TempInbox](https://tempinbox.dev/blog/email-for-testing)
+- [Temp Mail for QA Testing: Limits and Workflows](https://tempinbox.dev/blog/temp-mail-for-qa-testing)
+- [TempInbox receiving inbox](https://tempinbox.dev/)
+
+[Read the source article on TempInbox](https://tempinbox.dev/blog/payment-gateway-signup-testing).
