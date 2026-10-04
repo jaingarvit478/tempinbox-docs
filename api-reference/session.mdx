@@ -1,7 +1,11 @@
 ---
 title: Session
-description: Manage up to 3 addresses per browser session.
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
+
+<Note>
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
+</Note>
 
 The session system lets users keep multiple inboxes active simultaneously (up to 3). It uses an HMAC-signed `session_id` cookie stored in Cloudflare KV.
 
@@ -18,7 +22,7 @@ Session endpoints are designed for browser clients. For API automation, track JW
 Returns all addresses in the current session and which one is active.
 
 ```bash
-curl https://tempinbox.dev/api/session/addresses \
+curl https://your-worker.example.com/api/session/addresses \
   -b cookies.txt   # sends session_id cookie
 ```
 
@@ -43,7 +47,7 @@ curl https://tempinbox.dev/api/session/addresses \
 Switches the active inbox. Updates the `jwt` cookie to the JWT for the selected address. Also rotates the `session_id` for security.
 
 ```bash
-curl -X POST https://tempinbox.dev/api/switch_address \
+curl -X POST https://your-worker.example.com/api/switch_address \
   -H "Content-Type: application/json" \
   -b cookies.txt -c cookies.txt \
   -d '{ "address": "swift-cloud-7x4@tempinbox.dev" }'
@@ -64,7 +68,7 @@ curl -X POST https://tempinbox.dev/api/switch_address \
 Deletes the session from KV storage and clears `jwt` and `session_id` cookies.
 
 ```bash
-curl -X POST https://tempinbox.dev/api/logout \
+curl -X POST https://your-worker.example.com/api/logout \
   -b cookies.txt -c cookies.txt
 ```
 

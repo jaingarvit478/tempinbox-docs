@@ -52,7 +52,18 @@
             ]
           },
           {
-            "group": "API Reference",
+            "group": "Browser Guides",
+            "pages": [
+              "guides/qa-workflows",
+              "guides/multiple-inboxes",
+              "guides/inbox-lifetime",
+              "guides/email-verification-codes",
+              "guides/privacy-and-access",
+              "guides/troubleshooting"
+            ]
+          },
+          {
+            "group": "Implementation Reference",
             "pages": [
               "api-reference/overview",
               "api-reference/authentication",
@@ -62,11 +73,11 @@
             ]
           },
           {
-            "group": "API Playground",
+            "group": "Self-Hosted Playground",
             "openapi": "openapi.json"
           },
           {
-            "group": "Integration Guides",
+            "group": "Self-Hosted Examples",
             "pages": [
               "guides/playwright",
               "guides/cypress",
@@ -76,10 +87,8 @@
               "guides/go",
               "guides/ruby",
               "guides/ci-pipeline",
-              "guides/qa-workflows",
               "guides/api-clients",
-              "guides/ai-agents",
-              "guides/troubleshooting"
+              "guides/ai-agents"
             ]
           },
           {

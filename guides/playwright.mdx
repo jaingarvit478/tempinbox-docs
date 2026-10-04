@@ -1,7 +1,11 @@
 ---
 title: "Playwright"
-description: "Automate email verification flows in Playwright end-to-end tests using the TempInbox API."
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
+
+<Note>
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
+</Note>
 
 ## Why use a real inbox in E2E tests?
 
@@ -32,7 +36,7 @@ npx playwright --version
 Create a shared helper that manages address creation and polling:
 
 ```typescript tempmail.ts
-const BASE = 'https://tempinbox.dev';
+const BASE = 'https://your-worker.example.com';
 
 export async function createInbox(): Promise<{ address: string; jwt: string }> {
   const res = await fetch(`${BASE}/api/new_address`, {
@@ -169,7 +173,7 @@ export default defineConfig({
   </Accordion>
 
   <Accordion title="Clean up after tests">
-    Call `DELETE /api/delete_address` in `afterAll` to keep inboxes tidy, though it's not strictly required since addresses don't expire.
+    Call `DELETE /api/delete_address` in `afterAll` to keep inboxes tidy, and follow that deployment's retention policy; address and message lifetime are not guaranteed.
   </Accordion>
 </AccordionGroup>
 

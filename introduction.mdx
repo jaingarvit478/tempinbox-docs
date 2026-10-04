@@ -7,7 +7,7 @@ description: "TempInbox is a free temporary email service. Get disposable inboxe
 
 TempInbox ([tempinbox.dev](https://tempinbox.dev)) is a free disposable inbox service. It gives you a working email address in seconds — no account, no password, no expiry timer.
 
-You can keep up to **3 persistent inboxes** per browser session. They stay alive until you delete them or clear your browser data.
+You can keep up to **3 persistent inboxes** per browser session. Access data stays in that browser profile; message availability is subject to temporary storage policy. There is no fixed lifetime or permanent retention guarantee.
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="bolt" href="/quickstart">
@@ -15,15 +15,15 @@ You can keep up to **3 persistent inboxes** per browser session. They stay alive
   </Card>
 
   <Card title="API Reference" icon="code" href="/api-reference/overview">
-    Full REST API for QA automation, CI pipelines, and developer tooling.
+    Self-hosted implementation concepts; no supported hosted automation API.
   </Card>
 
   <Card title="Playwright Guide" icon="flask" href="/guides/playwright">
-    Automate email verification flows in end-to-end tests.
+    Self-hosted examples for email verification tests.
   </Card>
 
   <Card title="CI Pipeline" icon="server" href="/guides/ci-pipeline">
-    Use temp email in GitHub Actions and other CI environments.
+    Self-hosted implementation examples for CI environments.
   </Card>
 </CardGroup>
 
@@ -33,9 +33,9 @@ You can keep up to **3 persistent inboxes** per browser session. They stay alive
 | --- | --- |
 | Inboxes per session | Up to 3 |
 | Signup required | No |
-| Expiry timer | None — persists until deleted |
+| Expiry timer | No minute countdown; temporary retention applies |
 | Outbound sending | Not supported (receive-only) |
-| API | REST, no API key required for public endpoints |
+| API | No supported public automation API |
 | Address format | `anything@tempinbox.dev` |
 | Languages | English, German |
 | Cost | Free |
@@ -45,7 +45,7 @@ You can keep up to **3 persistent inboxes** per browser session. They stay alive
 - Receiving OTP codes, magic links, and verification emails
 - Signing up for trials and gated content without using your real address
 - Developer and QA testing of email-dependent signup flows
-- CI pipeline automation of email verification steps
+- Manual QA of email verification steps; unattended CI needs separate supported infrastructure
 
 ## What it's NOT for
 
@@ -54,3 +54,12 @@ You can keep up to **3 persistent inboxes** per browser session. They stay alive
 </Warning>
 
 TempInbox is also **receive-only** — it accepts inbound SMTP mail but does not support sending outbound email.
+
+## Browser-use guides
+
+- [Email verification QA](/guides/qa-workflows)
+- [Manage multiple inboxes](/guides/multiple-inboxes)
+- [Inbox lifetime and retention](/guides/inbox-lifetime)
+- [Email verification codes](/guides/email-verification-codes)
+- [Privacy and browser access](/guides/privacy-and-access)
+- [Troubleshooting verification emails](/guides/troubleshooting)

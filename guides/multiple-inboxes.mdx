@@ -1,0 +1,35 @@
+---
+title: "Manage Multiple Inboxes"
+description: "Separate signup and verification tasks across up to three TempInbox inboxes."
+---
+
+TempInbox supports up to three saved inboxes in one browser. Assign each address to a distinct task and select the recipient inbox before checking messages.
+
+## A three-inbox test session
+
+| Inbox | Example use | Check |
+| --- | --- | --- |
+| One | Primary signup | The email verifies the intended account |
+| Two | Resend and expiry | Current codes work; expired or reused codes follow your application's rules |
+| Three | Invitation recipient | The invitation reaches the second persona |
+
+Use fewer inboxes when one is enough. Keep an address-to-test log outside the inbox, but remember that the address alone cannot restore access: the browser holds the signed access token.
+
+## Switching and cleanup
+
+1. Create an inbox and copy its address into your test application.
+2. Create another inbox if the task needs a separate persona, up to the three-inbox limit.
+3. Select the relevant inbox and match the message to the current attempt.
+4. Save needed information elsewhere before deleting an inbox to free a slot.
+
+Addresses can receive separate messages, but you select an inbox to inspect its contents. Saved access does not provide supported cross-device recovery, and retention remains temporary.
+
+## What about bulk testing?
+
+The hosted service has no supported public automation API. For unattended parallel CI, use an API-capable testing provider or a controlled capture system. Implementation examples elsewhere in these docs are not a hosted-service integration contract.
+
+## Related guides
+
+- [Email verification QA](/guides/qa-workflows)
+- [Inbox lifetime](/guides/inbox-lifetime)
+- [Full multiple-inbox article](https://tempinbox.dev/blog/temporary-email-inbox)

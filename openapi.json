@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "TempInbox API",
-    "description": "REST API for TempInbox (tempinbox.dev) — create temporary email inboxes, receive mail, and automate email verification workflows. Receive-only: outbound sending is not supported. Rate limits apply per IP, per path; exceeded requests return 429.",
+    "title": "TempInbox Self-Hosted Implementation",
+    "description": "Implementation endpoint examples for a deployment you operate. Verify against its deployed version and configuration. Hosted TempInbox has no supported public automation API; these examples are not a compatibility contract.",
     "version": "1.0.0",
     "contact": {
       "url": "https://tempinbox.dev"
@@ -10,8 +10,8 @@
   },
   "servers": [
     {
-      "url": "https://tempinbox.dev",
-      "description": "Public instance"
+      "url": "https://your-worker.example.com",
+      "description": "Illustrative self-hosted deployment; replace with your own server"
     }
   ],
   "security": [{ "bearerAuth": [] }],
@@ -20,7 +20,7 @@
       "post": {
         "operationId": "createAddress",
         "summary": "Create address",
-        "description": "Creates a new temporary inbox and returns its JWT. Protected by Cloudflare Turnstile on the public instance — raw API calls without a valid `cf_token` will fail. For automation, pre-create the address in the web UI and reuse the JWT (see Authentication). Self-hosted instances with Turnstile disabled can call this directly.",
+        "description": "Creates an inbox on your deployment. Turnstile requirements depend on deployment configuration. Hosted browser access tokens are not a supported CI integration.",
         "security": [],
         "tags": ["Addresses"],
         "requestBody": {

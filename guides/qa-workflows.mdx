@@ -3,6 +3,27 @@ title: "QA Workflows"
 description: "Patterns for using TempInbox in manual and automated QA workflows."
 ---
 
+## Hosted browser workflow
+
+TempInbox supports manual email-verification testing with up to three browser-saved inboxes. It has no supported public automation API.
+
+1. Open TempInbox and your test application in separate tabs.
+2. Create an inbox and copy its address into the signup form.
+3. Select the matching inbox and inspect the sender, recipient, subject, and message.
+4. Use the code or link and verify the intended account's state.
+5. Test resend, expiry, reused codes, and wrong-account attempts separately.
+
+Delivery and application verification are separate checks. Use a second or third inbox for another persona, preserve needed evidence outside the inbox, and finish the task before deleting it.
+
+- [Manage multiple inboxes](/guides/multiple-inboxes)
+- [Inbox lifetime and retention](/guides/inbox-lifetime)
+- [Email verification codes](/guides/email-verification-codes)
+- [Current email testing article](https://tempinbox.dev/blog/email-for-testing)
+
+## Self-hosted implementation examples
+
+The examples below describe implementation patterns for an instance you operate, with inbound routing and authentication configured for that deployment. They do not provide a supported hosted-service automation contract. For unattended CI, use a supported mail-testing integration or controlled mail capture system.
+
 ## The core pattern
 
 Every QA workflow using temp email follows the same structure:

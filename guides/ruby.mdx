@@ -1,15 +1,17 @@
 ---
 title: "Ruby"
-description: "Automate email verification in RSpec tests with the TempInbox API using Net::HTTP — no gem required."
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
+
+<Note>
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
+</Note>
 
 ## Pattern
 
 Standard library only: `net/http` + `json`. No gem, no API key.
 
-<Info>
-  `POST /api/new_address` is Turnstile-protected on the public instance. Pre-create addresses in the web UI and reuse the JWT, or self-host with Turnstile disabled. See [API Overview](/api-reference/overview).
-</Info>
+<Note>For automation, configure and use your own instance. Hosted browser access tokens are not a supported integration credential.</Note>
 
 ---
 
@@ -21,7 +23,7 @@ require "json"
 require "uri"
 
 module TempInbox
-  BASE = "https://tempinbox.dev"
+  BASE = "https://your-worker.example.com"
 
   def self.create_inbox
     uri = URI("#{BASE}/api/new_address")

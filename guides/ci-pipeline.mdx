@@ -1,7 +1,11 @@
 ---
 title: "CI Pipeline"
-description: "Use TempInbox in GitHub Actions, GitLab CI, and other CI environments for automated email verification testing."
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
+
+<Note>
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
+</Note>
 
 ## GitHub Actions
 
@@ -23,7 +27,7 @@ jobs:
       - name: Create temp email inbox
         id: inbox
         run: |
-          RESPONSE=$(curl -s -X POST https://tempinbox.dev/api/new_address \
+          RESPONSE=$(curl -s -X POST https://your-worker.example.com/api/new_address \
             -H "Content-Type: application/json" \
             -d '{}')
           echo "address=$(echo $RESPONSE | jq -r .address)" >> $GITHUB_OUTPUT
@@ -40,12 +44,12 @@ jobs:
           JWT: ${{ steps.inbox.outputs.jwt }}
         run: |
           for i in $(seq 1 15); do
-            MAIL=$(curl -s "https://tempinbox.dev/api/mails?limit=1&offset=0" \
+            MAIL=$(curl -s "https://your-worker.example.com/api/mails?limit=1&offset=0" \
               -H "Authorization: Bearer $JWT")
             COUNT=$(echo $MAIL | jq '.count')
             if [ "$COUNT" -gt "0" ]; then
               UUID=$(echo $MAIL | jq -r '.results[0].uuid')
-              RAW=$(curl -s "https://tempinbox.dev/api/mail/$UUID" \
+              RAW=$(curl -s "https://your-worker.example.com/api/mail/$UUID" \
                 -H "Authorization: Bearer $JWT" | jq -r '.raw')
               OTP=$(echo "$RAW" | grep -oP '\b\d{6}\b' | head -1)
               echo "otp=$OTP" >> $GITHUB_OUTPUT
@@ -112,7 +116,7 @@ For test frameworks that need the address upfront (before the test runner starts
 ```bash
 # generate_inbox.sh — run before test suite
 #!/bin/bash
-RESPONSE=$(curl -s -X POST https://tempinbox.dev/api/new_address \
+RESPONSE=$(curl -s -X POST https://your-worker.example.com/api/new_address \
   -H "Content-Type: application/json" -d '{}')
 export TEST_EMAIL=$(echo $RESPONSE | jq -r .address)
 export TEST_EMAIL_JWT=$(echo $RESPONSE | jq -r .jwt)
@@ -143,7 +147,7 @@ In CI with many parallel jobs:
 
 ## Secrets
 
-The TempInbox API requires **no API key** for the public instance. No secrets to manage in CI.
+Hosted TempInbox is not a supported CI integration. For your own deployment, configure authentication and store required credentials in the CI secret manager.
 
 For self-hosted instances with `PASSWORDS` set, add the password as a CI secret:
 

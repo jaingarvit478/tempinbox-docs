@@ -12,11 +12,11 @@ description: "Honest comparison: Mailtrap's SMTP sandbox vs TempInbox's real-del
 | Model | Real inbox, real delivery | Sandbox — mail intercepted, never delivered |
 | Tests real SMTP path | Yes — DNS, MX, queuing, spam filtering all real | No — bypasses real delivery by design |
 | Safe for "don't email real users" staging | Use unique test addresses | Yes — that's its core purpose |
-| HTML/spam analysis UI | No — parse `raw` yourself | Yes — preview, HTML check, spam score |
+| HTML/spam analysis UI | Manual message inspection | Yes — preview, HTML check, spam score |
 | Price | Free | Free tier; paid plans for volume/teams |
-| API key | None | Required |
+| Hosted automation API | Not offered as a supported public integration | Check the provider's current integration options |
 | Account | None | Required |
-| E2E signup tests (Playwright/Cypress) | Natural fit — form gets a real address | Needs SMTP config pointed at the trap |
+| E2E signup tests (Playwright/Cypress) | Manual browser checks; unattended tests need separate integration | Needs SMTP config pointed at the trap |
 | Production-config testing | Yes — no app changes needed | No — app must use sandbox SMTP credentials |
 
 ## When Mailtrap wins
@@ -27,11 +27,11 @@ Pre-production content inspection: previewing templates, HTML rendering across c
 
 - **End-to-end truth**: Mailtrap can't tell you real delivery works — wrong DNS, broken MX, or a provider block never shows up in a sandbox. A TempInbox test fails when delivery actually fails.
 - **No app reconfiguration**: your app sends through its normal production SMTP path; the test just supplies a TempInbox address in the form
-- **Zero setup in CI**: no credentials, no sandbox host/port wiring — [CI guide](/guides/ci-pipeline)
+- **Manual browser checks**: no account setup; unattended CI needs a separate supported integration
 
 ## Use both
 
-Mature pipelines often do: Mailtrap in staging for content/spam checks, TempInbox in E2E suites for the real-delivery signup flow. They overlap less than they compete.
+Mature pipelines often do: Mailtrap in staging for content/spam checks, TempInbox for manual real-delivery signup checks. They overlap less than they compete.
 
 ## Related reading
 

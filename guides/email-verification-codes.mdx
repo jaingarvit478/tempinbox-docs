@@ -1,0 +1,31 @@
+---
+title: "Email Verification Codes"
+description: "Receive email codes and links, distinguish SMS, and understand expiry and delivery limits."
+---
+
+TempInbox can receive verification codes and links when the sender accepts the address and delivers the email. It cannot receive SMS codes or provide phone numbers.
+
+## Receive an email code
+
+1. Open [TempInbox](https://tempinbox.dev) and copy its address.
+2. Submit the address in your signup or test application and confirm it was accepted.
+3. Select the matching inbox and check sender, recipient, and the current attempt.
+4. Use the code or link before the sender's expiry window ends.
+
+There is no fixed delivery-time guarantee. The sender controls code expiry, while TempInbox's retention policy controls temporary storage. A late message can contain an expired code.
+
+## Test resend and expiry
+
+Test successful codes, expired codes, reused links, and codes entered for the wrong account. If the application offers resend, verify whether it invalidates older codes rather than assuming a particular behavior.
+
+## Email verification is different from two-factor authentication
+
+A signup confirmation proves access to an email address; it is not automatically an additional authentication factor. A service may also deliver login or authentication codes by email. Use a durable mailbox for recurring login and account recovery, since temporary access can be lost.
+
+For unattended framework tests, use a supported integration or your own capture system. TempInbox does not offer a supported public automation API.
+
+## Related guides
+
+- [Email verification QA](/guides/qa-workflows)
+- [Missing verification emails](/guides/troubleshooting)
+- [Full email-code article](https://tempinbox.dev/blog/temp-email-for-otp)

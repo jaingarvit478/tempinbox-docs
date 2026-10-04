@@ -1,15 +1,17 @@
 ---
 title: "Java"
-description: "Automate email verification in JUnit tests with the TempInbox API using java.net.http — no SDK required."
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
+
+<Note>
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
+</Note>
 
 ## Pattern
 
 Plain `java.net.http.HttpClient` (Java 11+) plus any JSON library. No SDK, no API key.
 
-<Info>
-  `POST /api/new_address` is Turnstile-protected on the public instance. Pre-create addresses in the web UI and reuse the JWT, or self-host with Turnstile disabled. See [API Overview](/api-reference/overview).
-</Info>
+<Note>For automation, configure and use your own instance. Hosted browser access tokens are not a supported integration credential.</Note>
 
 ---
 
@@ -23,7 +25,7 @@ import java.util.regex.*;
 import com.fasterxml.jackson.databind.*;
 
 public class TempInbox {
-    private static final String BASE = "https://tempinbox.dev";
+    private static final String BASE = "https://your-worker.example.com";
     private static final HttpClient http = HttpClient.newHttpClient();
     private static final ObjectMapper json = new ObjectMapper();
 

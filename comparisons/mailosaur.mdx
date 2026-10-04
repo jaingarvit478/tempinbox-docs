@@ -3,21 +3,21 @@ title: "TempInbox vs Mailosaur"
 description: "Honest comparison for email testing: free TempInbox vs paid Mailosaur — API keys, SMS, spam analysis, and when each fits."
 ---
 
-**Short answer:** Mailosaur is a paid, full-featured email and SMS testing platform with official SDKs and deep assertions (spam scoring, link checking, screenshots). TempInbox is free with a no-key REST API. If you need Mailosaur's analysis features or SMS, pay for it. If you need "receive the verification email and extract the code" in tests, TempInbox does that for free.
+**Short answer:** Mailosaur is a paid, full-featured email and SMS testing platform with official SDKs and deep assertions (spam scoring, link checking, screenshots). TempInbox is free and browser-based. If you need Mailosaur's analysis features or SMS, pay for it. For manual verification checks, TempInbox lets you read received codes and links without creating an account. It does not offer a supported hosted automation API.
 
 ## Comparison
 
 | | TempInbox | Mailosaur |
 | --- | --- | --- |
 | Price | Free | Paid (trial available) |
-| API key | None | Required |
-| Official SDKs | No — plain REST (copy-paste helpers provided) | Yes: JS, Python, Java, .NET, Ruby, Go, PHP |
+| Hosted automation API | Not offered as a supported public integration | Required |
+| Official SDKs | No supported hosted SDK | Yes: JS, Python, Java, .NET, Ruby, Go, PHP |
 | SMS testing | No | Yes |
 | Spam/deliverability analysis | No | Yes (SpamAssassin scoring, auth checks) |
-| Link + screenshot testing | Parse `raw` yourself | Built-in assertions |
+| Link + screenshot testing | Inspect messages manually | Built-in assertions |
 | Dedicated servers/domains | No | Yes |
 | Inbox privacy | Private, JWT-bound | Private |
-| Inbox lifetime | No expiry until deleted | Retention per plan |
+| Inbox lifetime | No minute countdown; temporary retention applies | Retention per plan |
 | Setup | Seconds, no account | Account + API key + server config |
 
 ## When Mailosaur wins
@@ -26,10 +26,10 @@ Official SDK ergonomics, SMS flows, built-in spam scoring and email-content asse
 
 ## When TempInbox wins
 
-- **Free forever for the core workflow**: create inbox → poll → extract OTP/link
-- **No key management**: nothing to rotate, no secrets in CI ([CI guide](/guides/ci-pipeline))
-- **No per-message or per-server billing**: parallel test matrices create as many inboxes as they need
-- **Simpler mental model**: three endpoints, JSON in/out — [full API playground](/api-reference/overview)
+- **Browser workflow**: create an inbox, perform a manual test, and inspect the received message
+- **No account setup for browser use**: unattended CI still requires separate supported infrastructure
+- **Up to three saved inboxes**: separate manual test personas within the browser interface limit
+- **Implementation examples**: [self-hosted endpoint reference](/api-reference/overview) is separate from hosted browser use
 
 ## Related reading
 

@@ -1,11 +1,13 @@
 ---
 title: "Addresses"
-description: "Create and manage temporary email addresses."
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
 
 <Note>
-  `POST /api/new_address` requires Cloudflare Turnstile when enabled on the server. For automation, extract a JWT from the browser instead of calling this endpoint directly. See [Authentication](/api-reference/authentication) for details.
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
 </Note>
+
+<Note>For automation, configure and use your own instance. Hosted browser access tokens are not a supported integration credential.</Note>
 
 ---
 
@@ -13,13 +15,13 @@ description: "Create and manage temporary email addresses."
 
 `POST /api/new_address`
 
-Creates a new temporary inbox. Returns a JWT and sets `jwt` \+ `session_id` cookies.
+Creates a new temporary inbox. Returns an address-scoped JWT. Cookie and session behavior depends on the deployed version; the current address-creation path does not create a server-side session.
 
 ### Turnstile Requirement
 
 This endpoint is protected by Cloudflare Turnstile on the public instance. Raw API calls without a valid `cf_token` will fail.
 
-**For automation:** Use a JWT extracted from the browser UI instead. See [Authentication → API automation](/api-reference/authentication).
+**For self-hosted automation:** obtain an address token from your own configured deployment. Hosted browser credentials are not a supported integration; see [Authentication](/api-reference/authentication).
 
 **For self-hosted instances** with Turnstile disabled:
 
@@ -79,7 +81,7 @@ To request a specific local part (before `@`):
 Returns the address for the current JWT. Useful for verifying auth.
 
 ```bash
-curl "https://tempinbox.dev/api/settings" \
+curl "https://your-worker.example.com/api/settings" \
   -H "Authorization: Bearer <jwt>"
 ```
 
@@ -98,7 +100,7 @@ curl "https://tempinbox.dev/api/settings" \
 Permanently deletes the address and all its emails. Irreversible.
 
 ```bash
-curl -X DELETE "https://tempinbox.dev/api/delete_address" \
+curl -X DELETE "https://your-worker.example.com/api/delete_address" \
   -H "Authorization: Bearer <jwt>"
 ```
 

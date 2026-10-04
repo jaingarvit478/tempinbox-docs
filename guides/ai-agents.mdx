@@ -1,7 +1,11 @@
 ---
 title: "Email for AI Agents"
-description: "Give your AI agent a working email inbox — receive verification codes, magic links, and signup emails via the TempInbox API."
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
+
+<Note>
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
+</Note>
 
 AI agents that sign up for services hit the same wall every time: the verification email. TempInbox gives an agent a real, working inbox through three plain REST calls — no browser scraping, no IMAP, no API key.
 
@@ -22,7 +26,7 @@ AI agents that sign up for services hit the same wall every time: the verificati
 The whole integration is one polling loop. This works in any agent runtime that can call functions:
 
 ```javascript email-tool.mjs
-const BASE = 'https://tempinbox.dev';
+const BASE = 'https://your-worker.example.com';
 
 export async function getVerificationCode(jwt, { timeoutMs = 60_000 } = {}) {
   const deadline = Date.now() + timeoutMs;
@@ -99,7 +103,7 @@ def wait_for_verification_email(timeout_s: int = 60) -> str:
 
 | Concern | Recommendation |
 | --- | --- |
-| Inbox creation | Pre-create in the web UI or at session bootstrap — `POST /api/new_address` is Turnstile-protected on the public instance ([details](/api-reference/overview)) |
+| Inbox creation | Create on your own configured deployment at session bootstrap; creation requirements depend on that deployment ([details](/api-reference/overview)) |
 | Credential handling | Keep the JWT in the tool handler, never in the prompt or model context |
 | Polling | 3-second interval, 60-second timeout; list responses are cached up to 60s at `offset=0` |
 | One agent, one inbox | Parallel agents must not share an inbox — same rule as [parallel tests](/guides/qa-workflows) |

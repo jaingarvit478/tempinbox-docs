@@ -1,7 +1,11 @@
 ---
 title: "Selenium"
-description: "Automate email verification flows in Selenium tests using the TempInbox API."
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
+
+<Note>
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
+</Note>
 
 ## Pattern
 
@@ -17,7 +21,7 @@ import re
 import time
 import requests
 
-BASE = "https://tempinbox.dev"
+BASE = "https://your-worker.example.com"
 
 
 def create_inbox() -> dict:
@@ -59,9 +63,7 @@ def extract_otp(raw: str) -> str:
     return match.group(0)
 ```
 
-<Info>
-  `POST /api/new_address` is protected by Cloudflare Turnstile on the public instance. For automation, pre-create addresses in the web UI and reuse the JWT, or run against a self-hosted instance with Turnstile disabled. See [API Overview](/api-reference/overview) for the recommended JWT workflow.
-</Info>
+<Note>For automation, configure and use your own instance. Hosted browser access tokens are not a supported integration credential.</Note>
 
 ---
 

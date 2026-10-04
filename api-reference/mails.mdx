@@ -1,7 +1,11 @@
 ---
 title: Mails
-description: List, read, and delete emails in a temporary inbox.
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
+
+<Note>
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
+</Note>
 
 ## List emails
 
@@ -16,7 +20,7 @@ Returns emails for the authenticated address, newest first.
 
 <CodeGroup>
 ```bash cURL
-curl "https://tempinbox.dev/api/mails?limit=20&offset=0" \
+curl "https://your-worker.example.com/api/mails?limit=20&offset=0" \
   -H "Authorization: Bearer <jwt>"
 ```
 
@@ -29,7 +33,7 @@ const { results, count } = await res.json();
 
 ```python Python
 r = requests.get(
-  'https://tempinbox.dev/api/mails',
+  'https://your-worker.example.com/api/mails',
   params={'limit': 20, 'offset': 0},
   headers={'Authorization': f'Bearer {jwt}'}
 )
@@ -69,7 +73,7 @@ For polling, call `GET /api/mails?limit=1&offset=0` repeatedly until `count > 0`
 Returns the full email including the raw RFC 2822 body. Parse `raw` client-side to extract subject, body HTML, and attachments.
 
 ```bash
-curl "https://tempinbox.dev/api/mail/550e8400-e29b-41d4-a716-446655440000" \
+curl "https://your-worker.example.com/api/mail/550e8400-e29b-41d4-a716-446655440000" \
   -H "Authorization: Bearer <jwt>"
 ```
 
@@ -105,7 +109,7 @@ Soft-deletes a single email. Returns immediately.
 
 ```bash
 curl -X DELETE \
-  "https://tempinbox.dev/api/mails/550e8400-e29b-41d4-a716-446655440000" \
+  "https://your-worker.example.com/api/mails/550e8400-e29b-41d4-a716-446655440000" \
   -H "Authorization: Bearer <jwt>"
 ```
 
@@ -118,7 +122,7 @@ curl -X DELETE \
 Deletes all emails in the inbox at once.
 
 ```bash
-curl -X DELETE https://tempinbox.dev/api/clear_inbox \
+curl -X DELETE https://your-worker.example.com/api/clear_inbox \
   -H "Authorization: Bearer <jwt>"
 ```
 

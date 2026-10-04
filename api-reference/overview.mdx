@@ -1,98 +1,28 @@
 ---
-title: "API Overview"
-description: "The TempInbox REST API lets you create inboxes, receive mail, and automate email verification workflows."
+title: "Implementation Reference"
+description: "Separate hosted browser use from self-hosted endpoint implementation examples."
 ---
 
-## Base URL
+## Hosted service
 
-```text
-https://tempinbox.dev
-```
+TempInbox at [tempinbox.dev](https://tempinbox.dev) is a browser-based, receive-only temporary inbox service. It does not currently offer a supported public automation API. Internal browser endpoints are not a stable integration contract, and exporting browser access tokens is not a supported CI workflow.
 
-## Important: Cloudflare Turnstile
+For hosted use, start with [email verification QA](/guides/qa-workflows), [multiple inboxes](/guides/multiple-inboxes), and [inbox lifetime](/guides/inbox-lifetime).
 
-TempInbox uses **Cloudflare Turnstile** to protect the `POST /api/new_address` endpoint from abuse. This means:
+## Self-hosted implementation examples
 
-- Browser-based use works automatically — Turnstile runs invisibly in the UI
-- **Automated/API use requires a valid `cf_token`** — you must solve a Turnstile challenge before creating an address
+The endpoint reference and framework examples describe implementation concepts for an instance you operate. Check them against the code and version you deploy. Some legacy examples can differ from the current implementation; there is no compatibility guarantee for the hosted site's internal endpoints.
 
-<Info>
-  For developer and QA automation, the recommended approach is to use the TempInbox **web UI** to pre-create addresses, copy the JWT from the browser (cookies or response body), and then use that JWT directly in your scripts to call the mail endpoints. The mail endpoints (`/api/mails`, `/api/mail/:uuid`) do **not** require Turnstile.
-</Info>
+Replace the illustrative `https://your-worker.example.com` with your own deployment URL and configure inbound mail routing, authentication, Turnstile, and rate limits deliberately. The examples are not a service that receives mail merely by copying a URL.
 
-### Getting a JWT for automation
+A deployment may require a valid Turnstile token when creating an address. Existing address access uses a signed token; knowing the address alone is insufficient. Keep test credentials in your test runner's private configuration and do not log verification tokens.
 
-1. Open [tempinbox.dev](https://tempinbox.dev) in your browser
-2. An address is created automatically — the JWT is set as an `HttpOnly` cookie named `jwt`
-3. Open DevTools → Application → Cookies → copy the `jwt` value
-4. Use it as `Authorization: Bearer <jwt>` in your API calls
+## Choosing automation infrastructure
 
-Alternatively, if Turnstile is disabled on a self-hosted instance, `POST /api/new_address` returns a JWT directly with no challenge.
+For unattended tests, use a supported API-capable mail-testing provider or a controlled capture system. Create a unique recipient per run, wait with a bounded timeout, and match the current recipient, sender, subject, and timestamp before extracting a code.
 
----
+## Related guides
 
-## Authentication
-
-Most endpoints require a **JWT bearer token**:
-
-```http
-Authorization: Bearer <jwt>
-```
-
-See [Authentication](/api-reference/authentication) for full details.
-
----
-
-## Rate Limits
-
-Rate limiting applies **per IP** on all write and read endpoints. Exceeded requests return `429 Too Many Requests`.
-
-| Endpoint | Limit |
-| --- | --- |
-| `POST /api/new_address` | Strict — Turnstile \+ IP rate limit |
-| `GET /api/mails` | Per IP, per path |
-| `GET /api/mail/:uuid` | Per IP, per path |
-| `POST /api/switch_address` | Per IP |
-| `DELETE /api/delete_address` | Per IP |
-| `DELETE /api/clear_inbox` | Per IP |
-| `GET /api/settings` | Per IP |
-| `GET /api/attachment/*` | Per IP |
-
-**Recommendations for automation:**
-
-- Add 2–3 second delays between poll attempts on `/api/mails`
-- Do not create new addresses in tight loops — reuse JWTs across test runs where possible
-- Use one inbox per test run, not one per assertion
-
----
-
-## Endpoint Groups
-
-| Group | Description |
-| --- | --- |
-| **Addresses** | Create, inspect, and delete temporary email addresses |
-| **Mails** | List, read, and delete emails in an inbox |
-| **Session** | Manage up to 3 addresses per browser session |
-| **System** | Health check |
-
----
-
-## Response Format
-
-All responses are JSON unless noted. Errors return plain text with an appropriate HTTP status code.
-
-```json
-// Success
-{ "address": "swift-cloud-7x4@tempinbox.dev", "jwt": "eyJ..." }
-
-// Error (plain text)
-"Invalid domain"
-```
-
----
-
-## Related reading
-
-- [Temp Mail API: Automate Disposable Inbox Flows](https://tempinbox.dev/blog/temp-mail-api) — use cases and API walkthrough
-- [Temp Email for Developers: API, CI, Testing](https://tempinbox.dev/blog/temp-email-for-developers) — how the API fits developer workflows
-- [Playwright](/guides/playwright), [Cypress](/guides/cypress), and [CI Pipeline](/guides/ci-pipeline) guides — runnable examples
+- [Current email testing article](https://tempinbox.dev/blog/email-for-testing)
+- [QA workflows](/guides/qa-workflows)
+- [Troubleshooting verification emails](/guides/troubleshooting)

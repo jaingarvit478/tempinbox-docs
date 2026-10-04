@@ -1,7 +1,11 @@
 ---
 title: "API Client Snippets"
-description: "Copy-paste TempInbox API clients for Python, Node.js, and shell — create inboxes, poll for mail, extract OTPs."
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
+
+<Note>
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
+</Note>
 
 Ready-to-use client helpers for the three most common automation environments. All of them implement the same three operations:
 
@@ -9,9 +13,7 @@ Ready-to-use client helpers for the three most common automation environments. A
 2. **Wait for mail** — poll `GET /api/mails?limit=1&offset=0`, then fetch `GET /api/mail/:uuid`
 3. **Extract content** — OTP codes or links from the raw body
 
-<Info>
-  `POST /api/new_address` requires a Cloudflare Turnstile token on the public instance. For scripts, pre-create the address in the web UI and copy the JWT (see [API Overview](/api-reference/overview)), or self-host with Turnstile disabled. The mail-reading endpoints used below need only the JWT.
-</Info>
+<Note>For automation, configure and use your own instance. Hosted browser access tokens are not a supported integration credential.</Note>
 
 ---
 
@@ -23,7 +25,7 @@ import re
 import time
 import requests
 
-BASE = "https://tempinbox.dev"
+BASE = "https://your-worker.example.com"
 
 
 def create_inbox() -> dict:
@@ -80,7 +82,7 @@ print("OTP:", extract_otp(mail["raw"]))
 Zero dependencies — uses the built-in `fetch` (Node 18+).
 
 ```javascript tempinbox.mjs
-const BASE = 'https://tempinbox.dev';
+const BASE = 'https://your-worker.example.com';
 
 export async function createInbox() {
   const res = await fetch(`${BASE}/api/new_address`, {
@@ -136,7 +138,7 @@ For CI steps and quick one-offs:
 ```bash tempinbox.sh
 #!/usr/bin/env bash
 set -euo pipefail
-BASE="https://tempinbox.dev"
+BASE="https://your-worker.example.com"
 
 # Create inbox
 RESPONSE=$(curl -s -X POST "$BASE/api/new_address" \

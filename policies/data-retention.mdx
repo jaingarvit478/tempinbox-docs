@@ -1,24 +1,24 @@
 ---
 title: "Data Retention Policy"
+description: "Temporary storage and scheduled cleanup; no fixed or permanent retention guarantee."
 ---
 
-# Data Retention Policy
+This documentation reflects the [TempInbox Data Retention Policy](https://tempinbox.dev/policies/data-retention), effective February 13, 2026. The linked service policy is the authoritative version.
 
-**Effective date:** February 1, 2026
+## Mailbox messages
 
-TempInbox is a temporary service. We retain data only as long as needed to operate the service.
+Messages are temporary. Mailbox content may be soft-deleted first and then permanently removed in scheduled batches after a grace window.
 
-## Retention periods
+## Attachments
 
-- **Messages and inbox metadata:** retained for a limited time (default 30 days).
-- **Deleted inboxes:** stored to prevent re‑use and reduce abuse.
-- **Logs:** retained for a short period for security and reliability.
+Attachment objects and metadata may be soft-deleted and then permanently removed by scheduled cleanup jobs.
 
-## Deletion
+## System and security data
 
-- Automatic cleanup is always enabled and deletes messages after the retention period.
-- You can delete messages or delete an inbox at any time to remove data sooner.
+Operational and audit records may be kept for security, abuse prevention, and troubleshooting, then deleted based on configured retention windows.
 
-## Exceptions
+## No long-term guarantee
 
-We may retain data longer if required by law or to protect the service from abuse.
+There is no published fixed retention duration or permanent-storage guarantee. Do not rely on TempInbox for long-term archiving or legally required record retention.
+
+Browser-saved access is separate from server-side storage. Clearing browser data can remove local access but does not itself guarantee immediate deletion of server-side data. See [inbox lifetime](/guides/inbox-lifetime).

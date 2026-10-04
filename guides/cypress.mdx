@@ -1,7 +1,11 @@
 ---
 title: "Cypress"
-description: "Use TempInbox in Cypress tests to automate email verification without mocking."
+description: "Self-hosted TempInbox implementation examples; not a supported hosted-service automation API."
 ---
+
+<Note>
+  The hosted TempInbox service has no supported public automation API. These implementation examples are for an instance you operate and must be checked against its deployed version, authentication, inbound mail routing, and rate limits. Do not export hosted browser access tokens for CI. For hosted manual use, see [QA workflows](/guides/qa-workflows).
+</Note>
 
 ## Pattern: Cypress tasks
 
@@ -12,7 +16,7 @@ Cypress tests run in the browser — they cannot make cross-origin API calls dir
 ## Setup: `cypress/support/tasks.ts`
 
 ```typescript cypress/support/tasks.ts
-const BASE = 'https://tempinbox.dev';
+const BASE = 'https://your-worker.example.com';
 
 export async function createTempInbox() {
   const res = await fetch(`${BASE}/api/new_address`, {
