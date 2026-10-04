@@ -1,0 +1,118 @@
+---
+title: "Temp Mail API: Supported Testing Workflows"
+description: "Learn a supported temp mail API lifecycle, provider feature checklist, bounded polling, and cleanup. TempInbox is a manual browser inbox with no public API."
+canonical: "https://tempinbox.dev/blog/temp-mail-api"
+---
+
+{/* Generated from Sanity. Edit the source article, not this file.
+source-id: article.en.temp-mail-api
+source-revision: NDSnLSsvLZ8vOkSVPiFmPD
+content-sha256: 200c9db7cf238aba9a0d6d80933ef90f28e2277d7fd37a8c993168389a746c8a
+*/}
+A supported temp mail API can allocate recipients, retrieve matching messages, and clean up test resources. Check authentication, quotas, filtering, retention, and failure handling before integration. TempInbox has no supported public API or SDK; use its browser inbox manually, or choose an API-capable provider for CI.
+
+Published 2026-02-21 · Updated 2026-10-04
+
+A temp mail API is a documented programmatic interface for receiving test email. Depending on the provider, it may allocate an inbox, list messages, retrieve content, and delete resources. These capabilities let a test runner verify signup, magic-link, reset, and invite flows without a human opening a mailbox.
+
+**TempInbox boundary:** Hosted TempInbox has no supported public API or SDK. Its browser inbox covers manual receiving checks. Do not treat the website's internal requests as a supported integration or infer an API launch date.
+
+## Can temporary email integrate with automation tools?
+
+Yes, when the selected service explicitly supports an API or a mail-capture interface. The runner can use that documented integration to allocate recipients and retrieve messages; a browser-only temporary mailbox does not provide that contract.
+
+Choose a supported third-party API for external receiving or operate an email capture service for controlled test environments. A self-hosted implementation is infrastructure you must configure, secure, monitor, and maintain; its capabilities and limits do not establish hosted TempInbox support.
+
+## What features should a supported temp mail API provide?
+
+Verify the entire lifecycle against the provider's current documentation and your own representative test.
+
+| Feature | Question to answer |
+| --- | --- |
+| Authentication | Can runner credentials be scoped and rotated? |
+| Recipient allocation | Does creation return an address and a stable resource identifier? |
+| Message matching | Can you filter exact recipients and inspect timestamps and headers? |
+| Delivery observation | Are polling or authenticated webhooks documented? |
+| Capacity | What are concurrency, creation, message, and request quotas? |
+| Content | Are HTML, plain text, MIME, and attachments available if needed? |
+| Cleanup and retention | What can be deleted, and what storage guarantees or deadlines apply? |
+| Failure handling | How are unauthorized requests, throttling, and outages reported? |
+
+Sending, replies, team access, custom domains, and service commitments require separate confirmation. Receiving support does not imply them. For bulk testing, agree on permitted volume and sender limits rather than assuming unlimited address creation.
+
+## What is the supported API testing lifecycle?
+
+Allocate, trigger, match, verify, and clean up using documented operations from your chosen provider.
+
+1.  Allocate a real recipient through the supported interface; keep its returned identifier.
+2.  Record the environment, test attempt, recipient, and action-start time.
+3.  Trigger one application email action using a synthetic account.
+4.  Wait for a matching message within a fixed overall deadline.
+5.  Check exact recipient, expected sender and subject, and whether the message belongs to this attempt.
+6.  Parse the expected code or approved application link; complete the flow and assert account state.
+7.  Clean up provider resources and application test accounts in a finally block using supported deletion operations.
+
+Use a new recipient for every retry. Timestamp filtering alone cannot distinguish an earlier delayed message from a resend; where available, use application correlation metadata or a unique recipient for the action under test. Never select the first message merely because it exists.
+
+## How should API polling avoid flaky tests?
+
+Use a fixed overall deadline, bounded request timeouts, capped backoff, and exact matching. Respect documented retry guidance and rate-limit responses. A failed request must not silently become an empty inbox.
+
+```
+Provider-neutral pseudocode; not a TempInbox endpoint or SDK:
+recipient = null
+try:
+  recipient = provider.allocateRecipient()
+  deadline = monotonicNow() + configuredBudget
+  triggerApplicationMail(recipient.address)
+  while monotonicNow() < deadline:
+    remainingBudget = deadline - monotonicNow()
+    messages = provider.listMessages(recipient.id,
+                    min(requestTimeout, remainingBudget))
+    match = findExactRecipientAndExpectedAttempt(messages)
+    if match: return validateAndExtract(match)
+    wait(min(backoffWithJitter, deadline - monotonicNow()))
+  failWithRedactedDeliveryDiagnostics()
+finally:
+  if recipient exists: provider.cleanupUsingDocumentedOperations()
+```
+
+The budget should reflect your measured delivery latency and the application's code expiry. Webhooks can replace polling if documented, but authenticate events, match them to the exact attempt, handle duplicates, and keep a deadline. Neither polling nor a webhook guarantees delivery.
+
+Browser-saved access does not eliminate delivery failures or guarantee future availability. Store only redacted debugging evidence under your team's policy, keep API secrets out of frontend code, and do not use disposable mail as an audit log.
+
+TempInbox is receive-only and has no supported public API, inbox passwords, custom domains, or cross-device recovery. Access stays with the browser profile holding its saved token. Knowing the address alone does not grant read access, but anyone controlling that browser profile can use it. Message retention is unspecified.
+
+## Related testing guides
+
+[Temp Email for Developers: Testing Choices](https://tempinbox.dev/blog/temp-email-for-developers), [Disposable Email in Playwright and Cypress](https://tempinbox.dev/blog/disposable-email-playwright-cypress), [Temp Mail for QA Testing: Limits and Workflows](https://tempinbox.dev/blog/temp-mail-for-qa-testing), [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing)
+
+## Start using TempInbox
+
+Try a receive-only inbox for manual checks. Keep up to 3 browser-saved inboxes; browser storage is not a retention guarantee.
+
+[Open your TempInbox inbox](https://tempinbox.dev/)
+
+## Frequently asked questions
+
+### What is a temp mail API?
+
+It is a documented programmatic interface for temporary receiving resources. Supported operations vary by provider; confirm creation, message retrieval, filtering, quotas, and cleanup before use.
+
+### Can I automate temporary email creation with TempInbox?
+
+Hosted TempInbox has no supported public API or bulk-creation integration. Use a documented API-capable provider or a capture service you operate for unattended creation.
+
+### How do I poll without waiting forever?
+
+Set an overall deadline and bounded request timeouts, use capped backoff, respect provider rate limits, and match the exact recipient and attempt. Fail with redacted diagnostics when the budget expires.
+
+## Related guides
+
+- [Temp Email for Developers: Testing Choices](https://tempinbox.dev/blog/temp-email-for-developers)
+- [Disposable Email in Playwright and Cypress](https://tempinbox.dev/blog/disposable-email-playwright-cypress)
+- [Temp Mail for QA Testing: Limits and Workflows](https://tempinbox.dev/blog/temp-mail-for-qa-testing)
+- [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing)
+- [TempInbox browser inbox](https://tempinbox.dev/)
+
+[Read the source article on TempInbox](https://tempinbox.dev/blog/temp-mail-api).

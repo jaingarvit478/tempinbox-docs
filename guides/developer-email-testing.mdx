@@ -1,0 +1,89 @@
+---
+title: "Temp Email for Developers: Testing Choices"
+description: "Choose temp email for manual development checks or supported API testing. Learn TempInbox onboarding, provider criteria, and environment isolation."
+canonical: "https://tempinbox.dev/blog/temp-email-for-developers"
+---
+
+{/* Generated from Sanity. Edit the source article, not this file.
+source-id: article.en.temp-email-for-developers
+source-revision: NDSnLSsvLZ8vOkSVPiFmPD
+content-sha256: 425d3130545976f4733267a19a6d728f1dc8ec067ab3dcdff2f9bbfff2dfe199
+*/}
+Use TempInbox for manual signup, reset, and invite checks with up to 3 browser-saved inboxes. For unattended CI, choose a provider with a documented API or an email capture service you operate. Separate local, preview, staging, and production tests with synthetic accounts; TempInbox has no supported public API.
+
+Published 2026-05-09 · Updated 2026-10-04
+
+Temporary email helps developers test signup verification, magic login links, password resets, team invites, and email-change confirmation without mixing test traffic into personal mail. Choose the receiving tool by the workflow: a browser inbox for a human check, a supported API or controlled mail capture service for unattended tests.
+
+## Where should developers start with TempInbox?
+
+Start with a manual test in a non-production environment: open TempInbox, create an address, submit it to your application, then read and verify the expected message. Check its recipient, sender, subject, code or link, and the resulting account state. Up to 3 browser-saved inboxes can separate signup, reset, and invite cases during one session.
+
+Use synthetic accounts and keep test credentials separate from production. Do not make an important account depend on future access to a disposable mailbox. Delete test accounts in your application when finished; removing a saved inbox is not evidence of a server-side retention deadline.
+
+## How do developers choose a temporary email provider?
+
+The best provider is the one that supports the test contract you need; a universal top-rated ranking does not establish suitability for your stack.
+
+| Need | Choose | Verify before use |
+| --- | --- | --- |
+| Human checks of verification mail | A browser inbox such as TempInbox | Access model, receiving domain acceptance, browser limits |
+| Unattended CI and parallel workers | A documented API-capable email-testing provider | Authentication, quotas, filtering, cleanup, failure behavior |
+| Local template and transport checks | A mail capture service you operate | Your app can route mail to it; this does not prove external delivery |
+| Shared team evidence and controlled domains | A platform explicitly supporting those requirements | Permissions, domain ownership, audit access, retention terms |
+
+Compare providers using a small representative test rather than rankings alone. Measure accepted recipients, typical delivery latency, reliable message matching, rate-limit responses, and debugging quality. Confirm whether any sending, attachments, webhooks, custom domains, or team permissions are actually supported; these are separate features, not implied by receiving mail.
+
+## Which developer services should I shortlist?
+
+There is no verified universal rating in this guide. Start with three concrete options and test against your own requirements: TempInbox for manual browser receiving; [Mailosaur](https://mailosaur.com/docs/automation) for a documented API and framework integrations; and [Mailpit](https://mailpit.axllent.org/docs/api-v1/) for an SMTP capture service with an API that you operate in a controlled environment. Mail capture does not prove delivery through a public receiving domain. Check current plans, quotas, deployment requirements, and documentation before committing to a tool.
+
+## How should email tests stay isolated across environments?
+
+Separate local, preview, staging, and production tests through configuration, synthetic accounts, and fresh recipients. Local development can use captured mail; preview and staging can exercise real receiving with a supported provider. A production smoke test needs explicit authorization, a dedicated synthetic account, low volume, and no real customer data.
+
+Record environment, CI run, worker, test, and retry attempt in the test harness. Ask the provider to create a valid recipient instead of inventing an address on a domain you do not control. Where supported, separate provider projects or credentials by environment. Domain or prefix separation is an option only if your chosen provider supports it; TempInbox does not offer custom domains.
+
+## What should the email test contract include?
+
+A useful test contract defines the exact recipient, expected sender and subject, action time, link destination, and expected account-state change. A message arriving is only the first assertion.
+
+For automation, use fresh recipients per retry attempt and bounded polling. Test delayed mail, resend behavior, expired codes, duplicate link clicks, and invalid tokens. Keep API credentials in the runner secret store and redact verification tokens from artifacts. Tag or exclude synthetic test traffic from activation metrics and campaign reports so QA does not distort business data.
+
+Real mailbox tests cover paths that seeded account state bypasses, but receiving a message in one inbox does not prove deliverability to every provider or detect all spam filtering. Combine fast fixtures, capture tests, and a small external delivery suite.
+
+TempInbox is receive-only and has no supported public API, inbox passwords, custom domains, or cross-device recovery. Access stays with the browser profile holding its saved token. Knowing the address alone does not grant read access, but anyone controlling that browser profile can use it. Message retention is unspecified.
+
+## Related testing guides
+
+[Temp Mail API: Supported Testing Workflows](https://tempinbox.dev/blog/temp-mail-api), [Disposable Email in Playwright and Cypress](https://tempinbox.dev/blog/disposable-email-playwright-cypress), [Temp Mail for QA Testing: Limits and Workflows](https://tempinbox.dev/blog/temp-mail-for-qa-testing), [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing)
+
+## Start using TempInbox
+
+Try a receive-only inbox for manual checks. Keep up to 3 browser-saved inboxes; browser storage is not a retention guarantee.
+
+[Open your TempInbox inbox](https://tempinbox.dev/)
+
+## Frequently asked questions
+
+### How do developers use temp email in testing?
+
+Use a fresh receiving address for manual signup, reset, or invite checks. For automation, use a documented API-capable provider or controlled capture service and assert the correct message and resulting account state.
+
+### Does TempInbox provide a public API for CI?
+
+No. Hosted TempInbox has no supported public API or CI SDK. Its browser inbox is useful for manual development checks; unattended runs need another supported integration.
+
+### How do I separate email tests across environments?
+
+Use environment-specific configuration, synthetic accounts, and fresh recipients per test attempt. Keep credentials and account data separate. Use custom domains only with a provider that explicitly supports them.
+
+## Related guides
+
+- [Temp Mail API: Supported Testing Workflows](https://tempinbox.dev/blog/temp-mail-api)
+- [Disposable Email in Playwright and Cypress](https://tempinbox.dev/blog/disposable-email-playwright-cypress)
+- [Temp Mail for QA Testing: Limits and Workflows](https://tempinbox.dev/blog/temp-mail-for-qa-testing)
+- [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing)
+- [TempInbox browser inbox](https://tempinbox.dev/)
+
+[Read the source article on TempInbox](https://tempinbox.dev/blog/temp-email-for-developers).

@@ -1,0 +1,95 @@
+---
+title: "Temp Mail for QA Testing: Limits and Workflows"
+description: "Use TempInbox for manual QA with up to 3 browser-saved inboxes. Compare manual checks, unattended API tests, bulk testing, and team workflows."
+canonical: "https://tempinbox.dev/blog/temp-mail-for-qa-testing"
+---
+
+{/* Generated from Sanity. Edit the source article, not this file.
+source-id: article.en.temp-mail-for-qa-testing
+source-revision: NDSnLSsvLZ8vOkSVPiFmPD
+content-sha256: f91560caaf68b8045e1b0672cf10aa68e0ba51bb5f9c6e73793ff118e1dd0973
+*/}
+TempInbox suits manual signup, OTP, magic-link, reset, and invite checks with up to 3 browser-saved inboxes. It has no supported public API or shared team workspace. Unattended, bulk, or parallel CI tests need a documented API-capable provider or controlled capture service with suitable quotas and cleanup.
+
+Published 2026-07-03 · Updated 2026-10-04
+
+Use TempInbox for manual QA of signup confirmation, OTP codes, magic links, password resets, and invites in synthetic test accounts. Read the expected message and verify the application result. For unattended CI, bulk accounts, or many parallel workers, choose a supported API-capable provider or an email capture service you operate.
+
+## Can I use TempInbox for my QA workflow?
+
+Yes, for manual receiving checks with up to 3 browser-saved inboxes. This is a browser limit, not a bulk-account allowance or a team workspace.
+
+| QA task | TempInbox fit | Appropriate approach |
+| --- | --- | --- |
+| Manual signup, reset, OTP, or magic link | Useful | Human reads the correct message and verifies state |
+| Manual multi-account exploration | Limited to up to 3 saved inboxes | Keep cases separate in the same browser profile |
+| Unattended Playwright or Cypress | No supported hosted API or SDK | Supported provider adapter or controlled capture service |
+| Bulk accounts and parallel CI workers | Not a supported bulk workflow | API platform with documented quotas and allowed volume |
+| Shared team mailbox and audit evidence | No shared team workspace or cross-device recovery | Platform with access controls and evidence policy |
+| Load or deliverability testing | No capacity or delivery guarantees | Authorized purpose-built infrastructure |
+| SMS or sending/replies | Not supported | Separate tools suited to those channels |
+
+## What is a reliable manual QA workflow?
+
+Create a fresh inbox, trigger one known action, inspect the matching message, and assert the account-state change.
+
+1.  Open a [TempInbox receiving inbox](https://tempinbox.dev/) in your test browser profile.
+2.  Use that address with a synthetic account in local, preview, or staging.
+3.  Record the action and recipient so you can distinguish signup, reset, and resend messages.
+4.  Check sender, subject, body, and the expected code or link; delivery can be delayed and is not guaranteed.
+5.  Complete the flow and verify the result in the app, including expired or duplicate-link behavior where relevant.
+6.  Remove test accounts and saved inboxes when finished; follow your evidence policy for redacted screenshots.
+
+A second or third saved inbox can separate cases in one browser. This does not make them accessible to teammates on another device. A browser-saved token controls access, so sharing a profile also shares its inbox access. Losing browser data can lose access with no account-based recovery.
+
+## Which temp email is best for bulk or automated QA?
+
+Choose a documented API-capable service with enough recipient, message, request, and concurrency quota for your planned suite. For local tests under your control, a capture service can be a better fit. A browser-only mailbox is not a substitute for these interfaces.
+
+Evaluate provider authentication, exact recipient filtering, timeout behavior, cleanup, permitted volume, and support commitments. Shared team work also requires permissions and suitable retention terms. Do not infer these features from a free receiving inbox or a claim that it has no visible timer.
+
+For unattended verification, allocate a fresh recipient for each run, worker, test, and retry attempt. Trigger the application mail, wait within a fixed deadline, match the expected recipient and action, validate the code or link, and assert account state. Clean up in a finally block through supported provider operations. Never select the latest email from a shared mailbox without checking who and which attempt it belongs to.
+
+## Why use separate QA receiving resources?
+
+Separate recipients prevent stale messages and parallel workers from confusing the result. Separate environment configuration keeps local and staging traffic from contaminating production accounts, metrics, and evidence.
+
+Use fixtures or captured mail for fast template checks, then a small external receiving suite for real transport behavior. Receiving one message does not prove delivery to all inbox providers, and a missing message may reflect app dispatch, sender configuration, provider rejection, or delivery delay. Record enough redacted context to investigate those boundaries.
+
+Keep real customer information, production admin credentials, and important recovery accounts out of disposable receiving workflows. Test password reset with synthetic accounts; that is different from relying on a temporary inbox for your own lasting account recovery.
+
+TempInbox is receive-only and has no supported public API, inbox passwords, custom domains, or cross-device recovery. Access stays with the browser profile holding its saved token. Knowing the address alone does not grant read access, but anyone controlling that browser profile can use it. Message retention is unspecified.
+
+## Related testing guides
+
+[Temp Email for Developers: Testing Choices](https://tempinbox.dev/blog/temp-email-for-developers), [Temp Mail API: Supported Testing Workflows](https://tempinbox.dev/blog/temp-mail-api), [Disposable Email in Playwright and Cypress](https://tempinbox.dev/blog/disposable-email-playwright-cypress), [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing)
+
+## Start using TempInbox
+
+Try a receive-only inbox for manual checks. Keep up to 3 browser-saved inboxes; browser storage is not a retention guarantee.
+
+[Open your TempInbox inbox](https://tempinbox.dev/)
+
+## Frequently asked questions
+
+### Can I use TempInbox for QA testing?
+
+Yes, for manual receiving checks such as signup, OTP, reset, magic links, and invites with synthetic accounts. You can keep up to 3 browser-saved inboxes. Delivery and retention are not guaranteed.
+
+### Is TempInbox suitable for bulk or unattended CI testing?
+
+It has no supported public API or hosted framework SDK. Bulk or unattended suites need a documented API-capable provider or controlled capture service with suitable quotas and cleanup.
+
+### Can a QA team share TempInbox inboxes across devices?
+
+TempInbox access is browser-scoped, with no shared team workspace or cross-device recovery. Use a platform that explicitly supports controlled team access when handoffs or shared evidence require it.
+
+## Related guides
+
+- [Temp Email for Developers: Testing Choices](https://tempinbox.dev/blog/temp-email-for-developers)
+- [Temp Mail API: Supported Testing Workflows](https://tempinbox.dev/blog/temp-mail-api)
+- [Disposable Email in Playwright and Cypress](https://tempinbox.dev/blog/disposable-email-playwright-cypress)
+- [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing)
+- [TempInbox browser inbox](https://tempinbox.dev/)
+
+[Read the source article on TempInbox](https://tempinbox.dev/blog/temp-mail-for-qa-testing).

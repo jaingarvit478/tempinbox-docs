@@ -59,7 +59,16 @@
               "guides/inbox-lifetime",
               "guides/email-verification-codes",
               "guides/privacy-and-access",
-              "guides/troubleshooting"
+              "guides/troubleshooting",
+              "guides/developer-email-testing",
+              "guides/temporary-email-api",
+              "guides/framework-email-testing",
+              "guides/qa-testing-limits",
+              "guides/choose-a-temporary-email-service",
+              "guides/temporary-email-service-models",
+              "guides/testing-without-inbox-timers",
+              "guides/free-temporary-email",
+              "guides/email-without-registration"
             ]
           },
           {

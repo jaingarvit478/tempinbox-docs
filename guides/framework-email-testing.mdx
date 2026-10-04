@@ -1,0 +1,105 @@
+---
+title: "Disposable Email in Playwright and Cypress"
+description: "Integrate email testing with Playwright or Cypress using supported provider adapters, exact recipient matching, bounded waits, and isolated retries."
+canonical: "https://tempinbox.dev/blog/disposable-email-playwright-cypress"
+---
+
+{/* Generated from Sanity. Edit the source article, not this file.
+source-id: article.en.disposable-email-playwright-cypress
+source-revision: NDSnLSsvLZ8vOkSVPiFmPD
+content-sha256: a8527511863ab6889f639560545bed785f670ab46d0369fe6b154f3c45dcbb78
+*/}
+Use a supported email-provider adapter or local capture service alongside Playwright or Cypress. Allocate a fresh recipient for every test attempt, trigger the app flow, wait within a deadline for the exact message, then assert account state. Hosted TempInbox has no supported API or framework SDK; use it for manual checks.
+
+Published 2026-05-20 · Updated 2026-10-04
+
+Integrate temporary email into Playwright or Cypress through a supported receiving provider or a mail capture service you operate. The browser drives the application; a runner-side adapter allocates recipients and retrieves messages. Hosted TempInbox has no supported public API, Playwright SDK, or Cypress SDK.
+
+Email makes end-to-end tests flaky when a shared inbox contains stale codes, delivery is delayed, or parallel workers read each other's messages. A fresh recipient per test attempt and an explicit message contract prevent those common races.
+
+## How do I use temporary email with Playwright?
+
+Use a runner-side fixture backed by your chosen provider's documented interface, then keep mailbox work outside the page context.
+
+1.  Allocate a fresh recipient in fixture setup for this run, worker, test, and retry attempt.
+2.  Record the action-start time and submit that address through your app's signup form.
+3.  Use the adapter to wait for the exact recipient, expected sender, subject, and attempt within a bounded deadline.
+4.  Validate the message, extract the expected code or application link, and complete the browser flow.
+5.  Assert the verified account state and clean up the account and supported mailbox resources in fixture teardown.
+
+For verification links, check the URL's origin and expected path before navigation. Do not follow an arbitrary link found in a message. For codes, use a parser for the expected template rather than the first number in the body.
+
+## How do I use temporary email with Cypress?
+
+Use a Node-side task or supported plugin adapter for mailbox requests and return only the validated data the browser test needs. Keep provider credentials out of browser bundles.
+
+1.  Call a setup task to allocate a fresh recipient for this test attempt.
+2.  Drive the signup, reset, or invite flow with Cypress commands.
+3.  Call a wait task that performs bounded provider polling and exact matching.
+4.  Return a validated code or approved URL and finish the application flow.
+5.  Assert account state and perform cleanup through runner-side tasks.
+
+Coordinate the task timeout with the polling deadline and per-request timeout. An outer runner timeout can terminate your helper before it records useful diagnostics. Browser assertion retries do not by themselves implement a reliable mail polling loop.
+
+## How do recipient and retry isolation prevent collisions?
+
+Give every test attempt a fresh provider-issued recipient, including retries. Record run, worker, environment, test, and attempt identifiers in the harness; use them in provider-supported labels when available.
+
+Match the exact recipient and expected message type, then require an appropriate received-after time or application correlation marker. Sender, subject, and timestamp checks alone can still select a delayed message from a prior action. Avoid sharing recipients between resend, signup, and reset assertions. If testing resend specifically, define which code should remain valid and assert both old and new behavior.
+
+Do not invent a random address at a domain you do not control and assume it exists. Creation must be supported by the selected provider. Do not assume TempInbox exposes custom domains, scripted bulk creation, or shared team access.
+
+## How should email waits and failures be handled?
+
+Wait only until a configured overall deadline, with bounded network requests and capped backoff or a supported authenticated webhook. Treat unauthorized responses and malformed messages as errors; handle throttling according to the provider's documented retry rules.
+
+```
+Provider-neutral adapter contract, not runnable TempInbox code:
+allocateRecipient(attemptIdentity)
+waitForMessage({ recipient, sender, subject, actionStart,
+                 attemptCorrelation, deadline, requestTimeout })
+extractValidatedCodeOrApprovedAppLink(message)
+cleanupSupportedResources(recipient)
+```
+
+Set the deadline from measured latency and code expiry. Failure diagnostics should include redacted recipient identifiers, request status, elapsed time, and match counts, without exposing API keys, message bodies, or full magic links. Capture application screenshots separately.
+
+Test delayed delivery, missing mail, expired codes, invalid tokens, and duplicate verification clicks. Local capture tests are fast and useful for templates and routing, while a small external receiving suite checks real delivery paths. Neither proves universal deliverability or an SLA.
+
+Manual TempInbox checks remain useful for inspecting the same flows by hand. Its browser-saved access should not be treated as an unattended CI contract.
+
+TempInbox is receive-only and has no supported public API, inbox passwords, custom domains, or cross-device recovery. Access stays with the browser profile holding its saved token. Knowing the address alone does not grant read access, but anyone controlling that browser profile can use it. Message retention is unspecified.
+
+## Related testing guides
+
+[Temp Email for Developers: Testing Choices](https://tempinbox.dev/blog/temp-email-for-developers), [Temp Mail API: Supported Testing Workflows](https://tempinbox.dev/blog/temp-mail-api), [Temp Mail for QA Testing: Limits and Workflows](https://tempinbox.dev/blog/temp-mail-for-qa-testing), [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing)
+
+## Start using TempInbox
+
+Try a receive-only inbox for manual checks. Keep up to 3 browser-saved inboxes; browser storage is not a retention guarantee.
+
+[Open your TempInbox inbox](https://tempinbox.dev/)
+
+## Frequently asked questions
+
+### How do I use disposable email in Playwright tests?
+
+Use a runner-side adapter for a supported provider or local capture service. Allocate a fresh recipient per attempt, wait with exact matching and a deadline, validate the code or link, then assert account state.
+
+### Can I automate mailbox checking in Cypress?
+
+Yes, with a supported provider integration in a Node-side task. Keep secrets in the runner, bound the wait, and return only validated data. TempInbox has no supported hosted API or Cypress SDK.
+
+### How do I stop parallel tests reading the wrong email?
+
+Use fresh recipients per run, worker, test, and retry attempt. Match the recipient and expected action, using timestamps and correlation data where available. Never select the first message from a shared inbox.
+
+## Related guides
+
+- [Temp Email for Developers: Testing Choices](https://tempinbox.dev/blog/temp-email-for-developers)
+- [Temp Mail API: Supported Testing Workflows](https://tempinbox.dev/blog/temp-mail-api)
+- [Temp Mail for QA Testing: Limits and Workflows](https://tempinbox.dev/blog/temp-mail-for-qa-testing)
+- [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing)
+- [TempInbox browser inbox](https://tempinbox.dev/)
+
+[Read the source article on TempInbox](https://tempinbox.dev/blog/disposable-email-playwright-cypress).
