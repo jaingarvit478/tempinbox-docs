@@ -1,0 +1,32 @@
+[
+  {
+    "id": "article.en.email-for-testing",
+    "path": "guides/qa-workflows",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.how-long-does-temp-email-last",
+    "path": "guides/inbox-lifetime",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.temporary-email-inbox",
+    "path": "guides/multiple-inboxes",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.temp-email-for-otp",
+    "path": "guides/email-verification-codes",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.private-vs-public-temp-mail",
+    "path": "guides/privacy-and-access",
+    "group": "Browser Guides"
+  },
+  {
+    "id": "article.en.temp-mail-blocked",
+    "path": "guides/troubleshooting",
+    "group": "Browser Guides"
+  }
+]

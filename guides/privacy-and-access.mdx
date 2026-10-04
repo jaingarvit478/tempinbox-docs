@@ -1,34 +1,94 @@
 ---
-title: "Privacy and Browser Access"
-description: "Understand signed inbox access, shared-device risks, and privacy-focused temporary signups."
+title: "Private vs Public Temp Mail: Privacy and Limits"
+description: "Compare public and browser-scoped temporary inboxes. Understand TempInbox access tokens, shared-device risks, retention, and privacy-focused signups."
+canonical: "https://tempinbox.dev/blog/private-vs-public-temp-mail"
 ---
 
-TempInbox verifies a signed mailbox access token saved in your browser. Knowing an email address alone does not grant read access. Someone who controls your browser profile or obtains its access token may still be able to read the associated inbox.
+{/* Generated from Sanity. Edit the source article, not this file.
+source-id: article.en.private-vs-public-temp-mail
+source-revision: 3KXf86kWrDiyyv8bHZafpM
+content-sha256: 582033fb4128fa7321ee8e0ad9b2307b14c5cc3e485074d9b328e909854be113
+*/}
+Public temporary inboxes may be readable by anyone who knows the address. TempInbox requires a signed access token stored in the browser, so an address alone does not grant read access. This helps separate signup email from your main inbox, but does not provide anonymity, end-to-end encryption, or permanent storage.
 
-## What temporary email protects
+Published 2026-07-03 · Updated 2026-10-04
 
-For accepted short-term signups, using a disposable address keeps your main email out of that signup database. It can separate receiving workflows and reduce unwanted mail reaching your main inbox.
+**Short answer:** Not all temp mail is private. On public-inbox services, anyone who types the same address sees the same mail — including your verification codes and reset links. Browser-scoped services keep the inbox tied to your device instead. If a stranger guessing your inbox name could read your mail, treat that inbox as a postcard, not an envelope.
 
-It does not hide your IP address, cookies, browser identifiers, payment details, or other information you submit. It does not provide anonymity or claim end-to-end encryption.
+## The five models, compared
 
-## Shared browsers and access tokens
+| Model | Who can read your mail | Best for | Weak spot |
+| --- | --- | --- | --- |
+| Public shared inbox | Anyone who enters the same address | Throwaway tests with zero sensitivity | No privacy at all — codes and links are world-readable |
+| Browser-scoped temp inbox | Anyone holding the required access token | Signups, trials, verification codes | Access lost if browser data is cleared |
+| Password-protected temp inbox | Whoever has the password | Shared devices, repeat verification flows | Still policy-limited retention |
+| Email alias | You, in your real mailbox | Long-term accounts you want to keep | Ties back to your real account; setup effort |
+| Authenticated private mailbox | You, with full account auth | Sensitive, long-term correspondence | Full account overhead for one-off signups |
 
-Saved access can outlast a tab. Use a browser profile you control and treat its tokens as access credentials. Do not share them or paste them into external tools. TempInbox has no inbox-password feature or supported cross-device recovery.
+## How much do public inboxes actually leak?
 
-Clearing site data can remove local access, but does not itself guarantee immediate deletion of server-side messages. Service handling follows the privacy, security, and retention policies.
+Public temp mail uses guessable names on known domains, with no authentication. Password-reset links sent to such an inbox can be replayed by anyone watching it. If you have ever used a public inbox for a real account, assume that address is burned — our [Mailinator alternative guide](https://tempinbox.dev/blog/mailinator-alternative) covers migrating off the public model.
 
-## Which address should I choose?
+## What does browser-scoped access mean in TempInbox?
 
-| Need | Appropriate approach |
-| --- | --- |
-| Short-term accepted signup | Temporary inbox, if loss of access is acceptable |
-| Ongoing account while hiding the main address | An accepted alias forwarding to a durable mailbox |
-| Confidential correspondence or recovery-critical account | A durable authenticated mailbox with suitable protections |
+TempInbox saves an address and a signed access token in your browser profile. The service verifies that token to determine which mailbox you can read; knowing the address alone does not provide access.
 
-The receiving site's rules determine whether disposable addresses are accepted. Temporary email does not replace account authentication or durable recovery.
+You can keep up to three inboxes. There is no inbox-password feature or supported cross-device recovery. Anyone who controls your browser profile or obtains an access token may be able to read the associated inbox. Browser-scoped access is not end-to-end encryption.
+
+Read the [TempInbox Privacy Policy](https://tempinbox.dev/policies/privacy), [Security Policy](https://tempinbox.dev/policies/security), and [Data Retention Policy](https://tempinbox.dev/policies/data-retention) for service handling and temporary-storage limits.
+
+## Which model should you pick?
+
+One-off signup or trial: browser-scoped temp inbox. Account you will keep: alias, so mail lands in your real mailbox — see [temp email vs alias](https://tempinbox.dev/blog/temp-email-vs-email-alias). Genuinely sensitive correspondence: a private email provider with a real account. And never put banking, medical, or recovery-critical accounts on any temporary address, private or not.
+
+Password-protected temporary inboxes are a separate service model, not a TempInbox feature. The [temporary inbox access-control guide](https://tempinbox.dev/blog/temp-email-password-protection) explains the distinction.
+
+## Can you use temp email for privacy-focused signups?
+
+Yes, for short-term signups where the service accepts disposable addresses and you do not need durable recovery. A temporary address keeps your main email out of that signup, but does not hide other information you submit.
+
+IP addresses, cookies, browser identifiers, payment details, and a reused name can still link activities. Temporary email reduces one identifier's exposure; it does not prevent tracking or secure the rest of the account.
+
+## Does browser-persisted storage affect your privacy?
+
+Saved access data can outlast a tab, which is convenient on your own browser profile but matters on a shared device. Treat the profile and its tokens as access credentials.
+
+Do not share or paste access tokens into external tools. Clearing site data can remove local access, but does not itself guarantee immediate server-side erasure. Deletion and retention follow service policy; use a durable authenticated mailbox for long-term or confidential correspondence.
+
+## Does temporary email affect account security or reputation?
+
+The receiving site's policy determines whether a disposable address is accepted or contributes to risk checks. Temporary email does not replace strong authentication, and losing inbox access can prevent recovery of an account that still uses that address.
+
+Use a disposable inbox for a task you can finish and abandon. If you need the account later, choose an accepted durable address or alias and verify the account's recovery options.
+
+## Frequently asked questions
+
+### Is TempInbox a public inbox?
+
+No. TempInbox verifies a signed mailbox access token. Knowing an address alone does not grant read access, but someone with your token or browser profile may access the inbox.
+
+### Does TempInbox offer inbox passwords?
+
+No. The browser saves access tokens; there is no inbox-password feature.
+
+### Can I use temp email for privacy-focused signups?
+
+Yes, for accepted short-term signups that do not need durable recovery. It keeps your main email out of that signup but does not hide your IP, cookies, or other information you submit.
+
+### Does clearing browser data delete all server-side messages?
+
+No immediate server-side deletion is guaranteed by clearing local data. It can remove browser access; stored data follows the service deletion and retention policy.
+
+### Does temporary email make me anonymous?
+
+No. It changes the email address shared with a site, but other identifiers can still link your activity. TempInbox does not claim end-to-end encryption or anonymity.
 
 ## Related guides
 
-- [Privacy Policy](/policies/privacy)
-- [Data Retention Policy](/policies/data-retention)
-- [Full privacy comparison](https://tempinbox.dev/blog/private-vs-public-temp-mail)
+- [Compare temporary email and aliases](https://tempinbox.dev/blog/temp-email-vs-email-alias)
+- [Manage browser-saved inboxes](https://tempinbox.dev/blog/temporary-email-inbox)
+- [TempInbox Privacy Policy](https://tempinbox.dev/policies/privacy)
+- [TempInbox Data Retention Policy](https://tempinbox.dev/policies/data-retention)
+- [Open TempInbox](https://tempinbox.dev/)
+
+[Read the source article on TempInbox](https://tempinbox.dev/blog/private-vs-public-temp-mail).

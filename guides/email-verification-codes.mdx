@@ -1,31 +1,106 @@
 ---
-title: "Email Verification Codes"
-description: "Receive email codes and links, distinguish SMS, and understand expiry and delivery limits."
+title: "Temp Email for OTP: Codes, Links, and Limits"
+description: "Receive email verification codes with TempInbox. Learn delivery limits, code expiry, email versus SMS, and when a durable mailbox is needed."
+canonical: "https://tempinbox.dev/blog/temp-email-for-otp"
 ---
 
-TempInbox can receive verification codes and links when the sender accepts the address and delivers the email. It cannot receive SMS codes or provide phone numbers.
+{/* Generated from Sanity. Edit the source article, not this file.
+source-id: article.en.temp-email-for-otp
+source-revision: 3KXf86kWrDiyyv8bHZafpM
+content-sha256: f132094d4acfb6bb6f7b36ffce133f815dfb030472d22d90beed6c4273da59a2
+*/}
+TempInbox can receive email verification codes and links when the sender accepts the address and delivers the message. It cannot receive SMS codes. Code expiry is set by the sender, while message retention follows TempInbox policy. Use a durable mailbox for recurring login codes or account recovery.
 
-## Receive an email code
+Published 2026-05-29 · Updated 2026-10-04
 
-1. Open [TempInbox](https://tempinbox.dev) and copy its address.
-2. Submit the address in your signup or test application and confirm it was accepted.
-3. Select the matching inbox and check sender, recipient, and the current attempt.
-4. Use the code or link before the sender's expiry window ends.
+Email verification sends a code or link to an email address. TempInbox can receive these messages for short-term signup and manual testing when the sending service accepts disposable addresses. Delivery and successful verification are separate checks.
 
-There is no fixed delivery-time guarantee. The sender controls code expiry, while TempInbox's retention policy controls temporary storage. A late message can contain an expired code.
+## How do you receive an email verification code with TempInbox?
 
-## Test resend and expiry
+Create an inbox, use its address in the accepted signup form, and read the verification email when it arrives.
 
-Test successful codes, expired codes, reused links, and codes entered for the wrong account. If the application offers resend, verify whether it invalidates older codes rather than assuming a particular behavior.
+1.  Open [TempInbox](https://tempinbox.dev/) and copy the generated address.
+2.  Enter the address in your signup or test application and confirm that it was accepted.
+3.  Select that inbox, match the sender and recipient, and use the code or link before the sender's expiry window ends.
 
-## Email verification is different from two-factor authentication
+Delivery times vary. A sender may reject a disposable domain, delay delivery, or fail to send a message. There is no guaranteed completion time.
 
-A signup confirmation proves access to an email address; it is not automatically an additional authentication factor. A service may also deliver login or authentication codes by email. Use a durable mailbox for recurring login and account recovery, since temporary access can be lost.
+## What kinds of OTP emails a temp inbox receives
 
-For unattended framework tests, use a supported integration or your own capture system. TempInbox does not offer a supported public automation API.
+-   **6-digit numeric OTPs:** "Your verification code is 483921." Enter it in the form within the expiry window specified by the sender.
+-   **Magic links:** "Click here to log in." A single-use URL that authenticates you when clicked. These arrive as full email messages with a clickable link.
+-   **Account activation codes:** alphanumeric tokens like "Your activation code: AX7Y-3K2M." Same flow as numeric OTPs.
+-   **Email verification links:** "Confirm your email address." A link that verifies you own the address. Most new account signups use this pattern.
+
+TempInbox can receive these email formats when the sender accepts the address and successfully delivers the message. This does not guarantee acceptance by every service.
+
+## How quickly does an email verification code arrive?
+
+Delivery depends on the sender, mail transport, and inbox service; TempInbox does not promise a fixed number of seconds.
+
+If a code is missing, check the exact recipient and selected inbox, confirm the form accepted the address, and inspect delivery logs when testing your own application. A delay is not proof of blocking and should not automatically be blamed on either service. Follow the [blocked or missing verification email checklist](https://tempinbox.dev/blog/temp-mail-blocked).
+
+## Can a verification code expire before you use it?
+
+Yes. The sending application controls the code or link's validity period, and a delayed message may contain an expired credential.
+
+TempInbox's lack of a minute countdown does not extend the sender's expiry window or guarantee message retention. Request a new code when supported, then test whether your application invalidates older codes. Browser-saved inbox access remains separate from the [message retention policy](https://tempinbox.dev/blog/how-long-does-temp-email-last).
+
+## When to use a real inbox for OTP instead
+
+Temp email is the right choice for OTP when you are doing a one-time signup and do not intend to keep the account long-term. For accounts you will use repeatedly — particularly any that use email OTP as a recurring login mechanism (some passwordless apps send a new OTP every time you log in) — use a durable real inbox.
+
+The rule: if you will need to receive an OTP from this service in six months, use your real address. If this is a one-time signup, a trial, or a test account, temp email is fine.
+
+## Email OTP vs SMS OTP
+
+These are different verification methods. Temp email solves email OTP — any service that sends a code or link to an email address. SMS OTP sends a code to a phone number via text message, which requires a real phone number or a virtual number service. TempInbox does not provide phone numbers.
+
+If you are looking for a temporary phone number for SMS verification, that is a different product category entirely.
+
+## How do you test email verification codes?
+
+Use TempInbox for manual checks of successful codes, expiry, resend, and wrong-account attempts. Up to three browser-saved inboxes can separate test personas.
+
+Confirm both that the email arrives and that your application changes the intended account state. TempInbox has no supported public automation API; unattended CI needs an API-capable mail-testing provider or a controlled capture system. See the [email verification testing guide](https://tempinbox.dev/blog/email-for-testing).
 
 ## Related guides
 
-- [Email verification QA](/guides/qa-workflows)
-- [Missing verification emails](/guides/troubleshooting)
-- [Full email-code article](https://tempinbox.dev/blog/temp-email-for-otp)
+[What is temp mail?](https://tempinbox.dev/blog/what-is-temp-mail) · [Can temp mail send email?](https://tempinbox.dev/blog/can-temp-mail-send-email) · [Create a temp email](https://tempinbox.dev/blog/create-temp-email) · [How long does temp email last?](https://tempinbox.dev/blog/how-long-does-temp-email-last)
+
+## Start using TempInbox
+
+Create a temporary inbox in seconds. No signup, no timer, up to 3 browser-saved inboxes.
+
+[Open your TempInbox →](https://tempinbox.dev/)
+
+## Frequently asked questions
+
+### Do temporary emails work for two-factor authentication codes?
+
+A temporary inbox can receive email-delivered codes if the sender accepts the address. Email verification is not automatically a second authentication factor. Use a durable mailbox for recurring login or recovery codes.
+
+### Can temporary emails receive SMS verification codes?
+
+No. TempInbox receives email, not text messages, and does not provide phone numbers.
+
+### How fast does an email code arrive?
+
+There is no fixed delivery-time guarantee. The sender, mail transport, and inbox service can each affect delivery.
+
+### Can a verification code expire before it arrives?
+
+Yes. The sender controls expiry. A late email can contain an expired code; request a new one if the application supports resend.
+
+### Can I automate OTP testing with TempInbox?
+
+TempInbox supports browser-based manual testing but does not currently offer a supported public automation API. Use a supported mail-testing integration for unattended tests.
+
+## Related guides
+
+- [Test email verification](https://tempinbox.dev/blog/email-for-testing)
+- [Troubleshoot blocked or missing verification emails](https://tempinbox.dev/blog/temp-mail-blocked)
+- [Understand code storage and inbox lifetime](https://tempinbox.dev/blog/how-long-does-temp-email-last)
+- [Create a TempInbox inbox](https://tempinbox.dev/)
+
+[Read the source article on TempInbox](https://tempinbox.dev/blog/temp-email-for-otp).

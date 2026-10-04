@@ -1,0 +1,23 @@
+name: Validate documentation tooling
+on:
+  pull_request:
+  push:
+    paths:
+      - 'scripts/**'
+      - 'content/sanity-map.json'
+      - 'package*.json'
+      - '.github/workflows/**'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run validate

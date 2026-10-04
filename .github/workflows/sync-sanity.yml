@@ -1,0 +1,85 @@
+name: Sync published Sanity articles
+
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  checks: read
+
+concurrency:
+  group: sanity-docs-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - name: Generate, validate and publish managed pages
+        id: publish
+        env:
+          SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2; do
+            node scripts/sync-sanity.mjs --apply | tee /tmp/sanity-sync-report.txt
+            node --input-type=module -e 'import fs from "node:fs"; import cp from "node:child_process"; const entries=JSON.parse(fs.readFileSync("content/sanity-map.json")); cp.execFileSync("git",["add","--","docs.json",...entries.map(e=>e.path+".mdx")]);'
+            if git diff --cached --quiet; then
+              echo 'changed=false' >> "$GITHUB_OUTPUT"
+              echo 'Published sources match the generated pages; no commit needed.' >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            git commit -m 'docs: sync published Sanity articles'
+            if git push origin HEAD:main; then
+              echo 'changed=true' >> "$GITHUB_OUTPUT"
+              echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+              echo '### Published article sync' >> "$GITHUB_STEP_SUMMARY"
+              cat /tmp/sanity-sync-report.txt >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            if [ "$attempt" = 2 ]; then exit 1; fi
+            git fetch origin main
+            git checkout -B sanity-sync-retry origin/main
+          done
+      - name: Verify external Mintlify deployment
+        if: steps.publish.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ steps.publish.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            checks=$(gh api "repos/$GITHUB_REPOSITORY/commits/$COMMIT_SHA/check-runs")
+            state=$(echo "$checks" | jq -r '[.check_runs[] | select(.app.slug | startswith("mintlify"))] | if length == 0 then "pending" elif any(.[]; .status != "completed") then "pending" elif all(.[]; .conclusion == "success") then "success" else "failure" end')
+            if [ "$state" = success ]; then
+              echo "Mintlify deployment succeeded for $COMMIT_SHA." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            if [ "$state" = failure ]; then
+              echo 'Mintlify deployment failed; inspect the external app check.' >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+            sleep 20
+          done
+          echo 'Mintlify deployment was not confirmed within ten minutes.' >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+      - name: Explain failed sync
+        if: failure()
+        run: echo 'Sync or deployment verification failed. Review this run before assuming docs are current; conversion failures do not publish partial content. Withdrawn sources require a removal review.' >> "$GITHUB_STEP_SUMMARY"
