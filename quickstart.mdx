@@ -1,24 +1,31 @@
 ---
 title: "Quickstart"
-description: "Create a temp email address and receive your first email in under 2 minutes."
+description: "Create a browser-saved temporary inbox and learn how to receive verification emails, with clear delivery and retention limits."
 ---
 
 ## Browser (no code)
 
 <Steps>
   <Step title="Open TempInbox">
-    Go to [tempinbox.dev](https://tempinbox.dev). A new inbox address is shown immediately — no signup needed.
+    Go to [tempinbox.dev](https://tempinbox.dev). No signup is required.
+  </Step>
+  <Step title="Create an inbox">
+    Select **Create inbox** and complete any required security check. Wait until your generated address is displayed.
   </Step>
   <Step title="Copy the address">
     Click the copy icon next to the address (e.g. `swift-cloud-7x4@tempinbox.dev`).
   </Step>
-  <Step title="Use it anywhere">
+  <Step title="Use it in an accepted signup form">
     Paste it into a signup or verification form that accepts temporary addresses. The inbox updates automatically when mail arrives.
   </Step>
   <Step title="Read your email">
     Click the email in the inbox to open it. Copy verification codes or click magic links directly.
   </Step>
 </Steps>
+
+Address creation and email delivery are separate steps. The sending service must accept the address and deliver its message; TempInbox does not guarantee a delivery time. Use verification codes and links before the sender's expiry window ends.
+
+TempInbox is receive-only: sending, replies, and forwarding are not supported. Up to three inboxes can be saved in the same browser profile. Saved access does not guarantee a fixed inbox lifetime or permanent message storage; clearing site data can remove your access.
 
 ---
 
@@ -87,19 +94,19 @@ print(f'Emails: {emails}')
 
 <CardGroup cols={2}>
   <Card title="Authentication" icon="key" href="/api-reference/authentication">
-    How JWT and session cookies work.
+    Authentication concepts for a self-hosted deployment.
   </Card>
 
   <Card title="Full API Reference" icon="book" href="/api-reference/overview">
-    All endpoints with request/response schemas.
+    Self-hosted endpoint examples; no supported hosted automation API.
   </Card>
 
   <Card title="Playwright Guide" icon="flask" href="/guides/playwright">
-    End-to-end email testing automation.
+    Self-hosted examples for email verification tests.
   </Card>
 
   <Card title="CI Pipeline" icon="server" href="/guides/ci-pipeline">
-    Use temp email in GitHub Actions.
+    Self-hosted implementation examples for CI environments.
   </Card>
 </CardGroup>
 
