@@ -6,12 +6,12 @@ canonical: "https://tempinbox.dev/blog/temp-email-for-otp"
 
 {/* Generated from Sanity. Edit the source article, not this file.
 source-id: article.en.temp-email-for-otp
-source-revision: 3KXf86kWrDiyyv8bHZafpM
-content-sha256: f132094d4acfb6bb6f7b36ffce133f815dfb030472d22d90beed6c4273da59a2
+source-revision: kCdnwQLkQEWR7mZroHFpDK
+content-sha256: 9a33df855d4781e358f3c745040acafbe92f135a4d11d9d44bcd94e1744c39d6
 */}
 TempInbox can receive email verification codes and links when the sender accepts the address and delivers the message. It cannot receive SMS codes. Code expiry is set by the sender, while message retention follows TempInbox policy. Use a durable mailbox for recurring login codes or account recovery.
 
-Published 2026-05-29 · Updated 2026-10-04
+Published 2026-05-29 · Updated 2026-11-15
 
 Email verification sends a code or link to an email address. TempInbox can receive these messages for short-term signup and manual testing when the sending service accepts disposable addresses. Delivery and successful verification are separate checks.
 
@@ -60,7 +60,7 @@ If you are looking for a temporary phone number for SMS verification, that is a 
 
 ## How do you test email verification codes?
 
-Use TempInbox for manual checks of successful codes, expiry, resend, and wrong-account attempts. Up to three browser-saved inboxes can separate test personas.
+Use TempInbox for manual checks of successful codes, expiry, resend, and wrong-account attempts. Up to three [browser-saved inboxes](https://tempinbox.dev/blog/temporary-email-inbox) can separate test personas.
 
 Confirm both that the email arrives and that your application changes the intended account state. TempInbox has no supported public automation API; unattended CI needs an API-capable mail-testing provider or a controlled capture system. See the [email verification testing guide](https://tempinbox.dev/blog/email-for-testing).
 

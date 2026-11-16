@@ -6,12 +6,12 @@ canonical: "https://tempinbox.dev/blog/private-vs-public-temp-mail"
 
 {/* Generated from Sanity. Edit the source article, not this file.
 source-id: article.en.private-vs-public-temp-mail
-source-revision: 3KXf86kWrDiyyv8bHZafpM
-content-sha256: 582033fb4128fa7321ee8e0ad9b2307b14c5cc3e485074d9b328e909854be113
+source-revision: K4ir9pmQ51eiFlV5lIOcof
+content-sha256: cec2a56d06045b2a411611edf01530e60923931ed5391006b31471825b78ffe1
 */}
 Public temporary inboxes may be readable by anyone who knows the address. TempInbox requires a signed access token stored in the browser, so an address alone does not grant read access. This helps separate signup email from your main inbox, but does not provide anonymity, end-to-end encryption, or permanent storage.
 
-Published 2026-07-03 · Updated 2026-10-04
+Published 2026-07-03 · Updated 2026-11-15
 
 **Short answer:** Not all temp mail is private. On public-inbox services, anyone who types the same address sees the same mail — including your verification codes and reset links. Browser-scoped services keep the inbox tied to your device instead. If a stranger guessing your inbox name could read your mail, treat that inbox as a postcard, not an envelope.
 
@@ -20,10 +20,10 @@ Published 2026-07-03 · Updated 2026-10-04
 | Model | Who can read your mail | Best for | Weak spot |
 | --- | --- | --- | --- |
 | Public shared inbox | Anyone who enters the same address | Throwaway tests with zero sensitivity | No privacy at all — codes and links are world-readable |
-| Browser-scoped temp inbox | Anyone holding the required access token | Signups, trials, verification codes | Access lost if browser data is cleared |
-| Password-protected temp inbox | Whoever has the password | Shared devices, repeat verification flows | Still policy-limited retention |
+| Browser-scoped temp inbox | Anyone holding the required access token | Low-risk code checks | Access lost if browser data is cleared |
+| Inbox password | Whoever has the password | Shared devices, repeat checks | Storage limits apply |
 | Email alias | You, in your real mailbox | Long-term accounts you want to keep | Ties back to your real account; setup effort |
-| Authenticated private mailbox | You, with full account auth | Sensitive, long-term correspondence | Full account overhead for one-off signups |
+| Account mailbox | You, with full account auth | Sensitive long-term mail | Full account overhead for one-off signups |
 
 ## How much do public inboxes actually leak?
 
@@ -39,7 +39,7 @@ Read the [TempInbox Privacy Policy](https://tempinbox.dev/policies/privacy), [Se
 
 ## Which model should you pick?
 
-One-off signup or trial: browser-scoped temp inbox. Account you will keep: alias, so mail lands in your real mailbox — see [temp email vs alias](https://tempinbox.dev/blog/temp-email-vs-email-alias). Genuinely sensitive correspondence: a private email provider with a real account. And never put banking, medical, or recovery-critical accounts on any temporary address, private or not.
+One-off signup or trial: a [browser-scoped temp inbox](https://tempinbox.dev/blog/temporary-email-inbox), where the destination accepts it and durable recovery is unnecessary. Account you will keep: alias, so mail lands in your real mailbox — see [temp email vs alias](https://tempinbox.dev/blog/temp-email-vs-email-alias). Genuinely sensitive correspondence: a private email provider with a real account. And never put banking, medical, or recovery-critical accounts on any temporary address, private or not.
 
 Password-protected temporary inboxes are a separate service model, not a TempInbox feature. The [temporary inbox access-control guide](https://tempinbox.dev/blog/temp-email-password-protection) explains the distinction.
 
