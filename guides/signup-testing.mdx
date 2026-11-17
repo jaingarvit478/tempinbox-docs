@@ -6,12 +6,12 @@ canonical: "https://tempinbox.dev/blog/temp-email-for-signups"
 
 {/* Generated from Sanity. Edit the source article, not this file.
 source-id: article.en.temp-email-for-signups
-source-revision: 3KXf86kWrDiyyv8bHZf7ZK
-content-sha256: f5bfae0f677033f5125dad19ad5ae8ca0c461f607820ddb8f85f4bb545b5d51f
+source-revision: 7FChZz0hoBghuiMTKLQu0u
+content-sha256: 48e36d219aaac4e6b3ba83479dc68a016574ef2247d5b2a646c06fc23c60a747
 */}
 Use TempInbox for free manual signup testing with synthetic accounts and up to 3 browser-saved inboxes. These are working receiving addresses, not your personal mailbox. Separate recipients and attempts, verify the correct code or link, and assert account state. For unattended or bulk tests, use a supported provider API.
 
-Published 2026-02-15 · Updated 2026-10-04
+Published 2026-02-15 · Updated 2026-11-17
 
 TempInbox is a free option for manual signup testing when you need working receiving addresses without using your personal mailbox. It supports up to 3 browser-saved inboxes. There is no universal best established here: choose based on whether the form accepts the address, the receiving workflow, and the recovery needs of the account.
 
@@ -57,6 +57,10 @@ Use a durable address from the start when the account will hold important data, 
 TempInbox access uses a token saved in your browser profile, with no inbox passwords or cross-device recovery. Anyone controlling that profile can use its access, and clearing storage can lose it. Message retention is unspecified, so saved access is not an assurance that later messages or old codes remain available.
 
 There are no custom domains or supported public API. Team handoffs, replies, controlled domains, and unattended workflows require different supported tools. Keep the three-inbox model focused on short-lived manual work.
+
+## Check the limits for the service you are using
+
+Before a manual signup, review the [TempInbox setup and access documentation](https://tempinbox.dev/docs). For platform-specific cautions, see [Facebook temporary email limits](https://tempinbox.dev/use-case/facebook), [Instagram account recovery limits](https://tempinbox.dev/use-case/instagram), [TikTok disposable-address cautions](https://tempinbox.dev/use-case/tiktok), [X (Twitter) email access limits](https://tempinbox.dev/use-case/twitter) and [Netflix subscription and recovery cautions](https://tempinbox.dev/use-case/netflix). Acceptance and delivery are not guaranteed; keep important accounts and ongoing subscriptions on a durable address.
 
 ## Related guides
 

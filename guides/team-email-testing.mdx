@@ -6,12 +6,12 @@ canonical: "https://tempinbox.dev/blog/temp-mail-for-qa-teams"
 
 {/* Generated from Sanity. Edit the source article, not this file.
 source-id: article.en.temp-mail-for-qa-teams
-source-revision: 3KXf86kWrDiyyv8bHZf7ZK
-content-sha256: b04fc21c069cd7eaf91a7034c2d34e7d04e6040a89837e4e25a300065bae9430
+source-revision: 7FChZz0hoBghuiMTKLQu0u
+content-sha256: 40ffe4c07e320f3fd4582dd8c46583c2d735ae72c3237d37484556c4d7559bf1
 */}
 TempInbox supports multiple manual testing workflows through up to 3 browser-saved inboxes: signup, resend or reset, and invites. Assign each test a recipient and record the expected action. It is not a shared team workspace or supported CI API; team handoffs and bulk automation need suitable controlled tools.
 
-Published 2026-06-19 · Updated 2026-10-04
+Published 2026-06-19 · Updated 2026-11-17
 
 TempInbox handles multiple manual testing workflows by separating their receiving addresses, with up to 3 browser-saved inboxes. A tester can use one for signup, one for resend or reset cases, and one for invites or another synthetic persona. Record which recipient belongs to each test so a verification code is not applied to the wrong account.
 
@@ -50,6 +50,8 @@ Browser-saved access does not promise that messages remain available: retention 
 Unattended, bulk, or parallel CI testing requires a documented API-capable provider or a mail capture system the team operates. Require exact recipient and attempt matching, bounded waits, supported cleanup, and quotas matching the suite.
 
 TempInbox is receive-only, with no custom domains or supported public API. Sending, replies, shared permissions, controlled domains, and retention commitments require explicit support from another service. Keep production administrative access, real merchant logins, and important recovery accounts on durable company mail. Synthetic sandbox email tests are a separate case from those lasting accounts.
+
+When a manual test message is missing, use the [email deliverability testing checklist](https://tempinbox.dev/blog/temp-email-deliverability-testing) to separate sender errors, filtering and recipient mistakes. A single received message is not a complete deliverability measurement.
 
 ## Related guides
 
