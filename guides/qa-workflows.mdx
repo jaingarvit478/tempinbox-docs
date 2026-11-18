@@ -6,22 +6,22 @@ canonical: "https://tempinbox.dev/blog/email-for-testing"
 
 {/* Generated from Sanity. Edit the source article, not this file.
 source-id: article.en.email-for-testing
-source-revision: NDSnLSsvLZ8vOkSVPiG6Bd
-content-sha256: 38d65d638bfd57dc2bf2eaa3d996a1859b4eadbb121d9bdb56f729f0de4d108c
+source-revision: g314ul13ToMwM6rTbrw9c2
+content-sha256: f5e6230604fc1e2d557ed7af3a58a85d643de2ea2408a468ae72ad57fbefeb98
 */}
 TempInbox supports browser-based testing of signup emails and verification codes with up to three inboxes. Create an inbox, use its address in your test application, and inspect the received message. TempInbox has no supported public automation API; use a supported mail-testing integration for unattended CI.
 
-Published 2026-05-09 · Updated 2026-10-04
+Published 2026-05-09 · Updated 2026-11-18
 
 Email verification is one of the easiest places for tests to break silently. The browser flow works, the form submits, the backend sends a message — but nothing arrives, or the inbox is stale from a previous run, or a shared Gmail account has 200 unread codes and the test picks the wrong one.
 
-A dedicated temporary inbox per test or per purpose removes all of that noise. Here is how to set up a sane email testing workflow.
+A separate receiving address for each test purpose can reduce message confusion. Still match the recipient, action and request time before using a message, including in a newly created inbox.
 
 ## Test the flows that block users first
 
 Prioritize the paths that prevent account access: signup verification, magic link login, password reset, and team invite. A broken verification email is not a minor bug. It is a hard wall. Users who cannot verify their email cannot enter the product at all.
 
-For each of these flows, use a fresh address so results are unambiguous. If the test inbox has one message and it is the one you triggered, there is no confusion about which code is current.
+Give each case a clear recipient and request mapping; a fresh address alone does not prove that a message belongs to the current attempt. For recovery-specific checks, follow the [password-reset email testing checklist](https://tempinbox.dev/blog/password-reset-email-testing) through to normal sign-in, then check expired, used and resent links.
 
 ## How do you test email verification with TempInbox?
 
@@ -59,7 +59,7 @@ These are the failure modes that generate support tickets. Finding them in QA is
 
 ## Keep test evidence useful for debugging
 
-When a test fails, the inbox should help explain what happened. Include the test name or a run ID in the address prefix when possible, so you can identify which test triggered which email. Record the time the signup request was sent, and capture the full email body in test artifacts — not just the extracted code. A full message with headers is far more useful for debugging a delivery failure than a missing OTP.
+Record the build, environment, synthetic account label, request time and observed result. Keep the recipient-to-test mapping in notes: TempInbox generates address names automatically and has no run-ID prefix field. Redact codes, full reset URLs, passwords, browser credentials and other sensitive message content before sharing screenshots or logs. Use a restricted evidence process if deeper investigation requires sensitive material.
 
 ## What is better for testing: temp mail or a real mailbox?
 
@@ -115,5 +115,6 @@ TempInbox can receive email verification codes when the sender accepts the addre
 - [Manage multiple TempInbox inboxes](https://tempinbox.dev/blog/temporary-email-inbox)
 - [Understand temporary inbox lifetime](https://tempinbox.dev/blog/how-long-does-temp-email-last)
 - [Create a TempInbox inbox](https://tempinbox.dev/)
+- [Password-reset email testing checklist](https://tempinbox.dev/blog/password-reset-email-testing)
 
 [Read the source article on TempInbox](https://tempinbox.dev/blog/email-for-testing).

@@ -6,12 +6,12 @@ canonical: "https://tempinbox.dev/blog/temp-mail-for-qa-testing"
 
 {/* Generated from Sanity. Edit the source article, not this file.
 source-id: article.en.temp-mail-for-qa-testing
-source-revision: NDSnLSsvLZ8vOkSVPiG6Bd
-content-sha256: 4ccd807de1c733ac11c8fe89a019d29c1ef3f8a6757f11935f7e26f606644a3b
+source-revision: g314ul13ToMwM6rTbrw9c2
+content-sha256: 6f279672432952ba53bcffbd182c8c02f2110eafa481acc47b528b30d5b1882a
 */}
 TempInbox suits manual signup, OTP, magic-link, reset, and invite checks with up to 3 browser-saved inboxes. It has no supported public API or shared team workspace. Unattended, bulk, or parallel CI tests need a documented API-capable provider or controlled capture service with suitable quotas and cleanup.
 
-Published 2026-07-03 · Updated 2026-10-04
+Published 2026-07-03 · Updated 2026-11-18
 
 Use TempInbox for manual QA of signup confirmation, OTP codes, magic links, password resets, and invites in synthetic test accounts. Read the expected message and verify the application result. For unattended CI, bulk accounts, or many parallel workers, choose a supported API-capable provider or an email capture service you operate.
 
@@ -56,7 +56,7 @@ Separate recipients prevent stale messages and parallel workers from confusing t
 
 Use fixtures or captured mail for fast template checks, then a small external receiving suite for real transport behavior. Receiving one message does not prove delivery to all inbox providers, and a missing message may reflect app dispatch, sender configuration, provider rejection, or delivery delay. Record enough redacted context to investigate those boundaries.
 
-Keep real customer information, production admin credentials, and important recovery accounts out of disposable receiving workflows. Test password reset with synthetic accounts; that is different from relying on a temporary inbox for your own lasting account recovery.
+Keep real customer information, production admin credentials, and important recovery accounts out of disposable receiving workflows. Test password reset with synthetic accounts; that is different from relying on a temporary inbox for your own lasting account recovery. Use the [password-reset email testing checklist](https://tempinbox.dev/blog/password-reset-email-testing) to distinguish delivery from completed recovery and cover invalid links, resend order and the final account state.
 
 TempInbox is receive-only and has no supported public API, inbox passwords, custom domains, or cross-device recovery. Access stays with the browser profile holding its saved token. Knowing the address alone does not grant read access, but anyone controlling that browser profile can use it. Message retention is unspecified.
 
@@ -95,5 +95,6 @@ TempInbox access is browser-scoped, with no shared team workspace or cross-devic
 - [Disposable Email in Playwright and Cypress](https://tempinbox.dev/blog/disposable-email-playwright-cypress)
 - [Email for Testing: A Practical QA Playbook](https://tempinbox.dev/blog/email-for-testing)
 - [TempInbox browser inbox](https://tempinbox.dev/)
+- [Password-reset email testing checklist](https://tempinbox.dev/blog/password-reset-email-testing)
 
 [Read the source article on TempInbox](https://tempinbox.dev/blog/temp-mail-for-qa-testing).
