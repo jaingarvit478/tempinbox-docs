@@ -2,11 +2,8 @@ name: Validate documentation tooling
 on:
   pull_request:
   push:
-    paths:
-      - 'scripts/**'
-      - 'content/sanity-map.json'
-      - 'package*.json'
-      - '.github/workflows/**'
+    branches:
+      - main
 permissions:
   contents: read
 jobs:
@@ -21,3 +18,8 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
       - run: npm run validate
+      - name: Check published source freshness on trusted main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          SANITY_READ_TOKEN: ${{ secrets.SANITY_READ_TOKEN }}
+        run: npm run sync:check

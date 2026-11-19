@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test scripts/*.test.mjs",
+    "sync:check": "node scripts/sync-sanity.mjs --check",
     "sync:preview": "node scripts/sync-sanity.mjs",
     "sync": "node scripts/sync-sanity.mjs --apply",
     "validate": "mintlify validate && mintlify broken-links"

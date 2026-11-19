@@ -34,7 +34,8 @@ export async function planExport(entries,records,files,{migration=false}={}) {
   }
   return changes;
 }
-export async function sync({root=process.cwd(),apply=false,migration=false,token,fetchSource=fetchSources,validateCandidate}={}) {
+export async function sync({root=process.cwd(),apply=false,migration=false,check=false,token,fetchSource=fetchSources,validateCandidate}={}) {
+  if(check&&(apply||migration)) throw new Error('--check cannot be combined with --apply or --migration.');
   const entries=validateManifest(JSON.parse(await readFile(join(root,'content/sanity-map.json'),'utf8')));
   const records=await fetchSource(entries,{token});
   const files=new Map();
@@ -52,6 +53,7 @@ export async function sync({root=process.cwd(),apply=false,migration=false,token
   const nav=JSON.stringify(docs,null,2)+'\n';
   if(nav!==originalNav) changes.push({path:'docs.json',content:nav});
   console.log(JSON.stringify({sources:records.map(doc=>({id:doc._id,revision:doc._rev})),changed:changes.map(change=>change.path)},null,2));
+  if(check&&changes.length) throw new Error(`Stale Sanity mirrors: ${changes.map(change=>change.path).join(', ')}. Run npm run sync:preview and review the source changes before publishing.`);
   if(!changes.length) return {changed:[]};
   const candidate=await mkdtemp(join(tmpdir(),'tempinbox-sanity-candidate-'));
   await cp(root,candidate,{recursive:true,filter:source=>!['.git','node_modules'].includes(source.split('/').at(-1))});
@@ -79,6 +81,6 @@ export async function sync({root=process.cwd(),apply=false,migration=false,token
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   const args=process.argv.slice(2);
-  if(args.some(arg=>!['--apply','--migration'].includes(arg))) throw new Error('Options: --apply, --migration.');
-  await sync({apply:args.includes('--apply'),migration:args.includes('--migration')});
+  if(args.some(arg=>!['--apply','--migration','--check'].includes(arg))) throw new Error('Options: --apply, --migration, --check.');
+  await sync({apply:args.includes('--apply'),migration:args.includes('--migration'),check:args.includes('--check')});
 }

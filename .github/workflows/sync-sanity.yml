@@ -39,6 +39,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           for attempt in 1 2; do
             node scripts/sync-sanity.mjs --apply | tee /tmp/sanity-sync-report.txt
+            npm run sync:check
             node --input-type=module -e 'import fs from "node:fs"; import cp from "node:child_process"; const entries=JSON.parse(fs.readFileSync("content/sanity-map.json")); cp.execFileSync("git",["add","--","docs.json",...entries.map(e=>e.path+".mdx")]);'
             if git diff --cached --quiet; then
               echo 'changed=false' >> "$GITHUB_OUTPUT"
